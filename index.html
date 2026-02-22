@@ -97,12 +97,20 @@ const tg = window.Telegram?.WebApp;
 tg?.ready();
 tg?.expand();
 
+const CONTACT_USERNAME = "TON_USERNAME"; // <-- remplace ici
+
+/* =========================
+   PRODUITS
+========================= */
 const PRODUCTS = [
 {id:"A1",name:"Frozen",price:15},
 {id:"A2",name:"Cali US",price:20},
 {id:"A3",name:"Cali NL",price:10}
 ];
 
+/* =========================
+   STATE
+========================= */
 let cart = JSON.parse(localStorage.getItem("am_cart")||"{}");
 
 const productsDiv=document.getElementById("products");
@@ -113,16 +121,39 @@ const cartItems=document.getElementById("cartItems");
 const cartInfo=document.getElementById("cartInfo");
 const cartCount=document.getElementById("cartCount");
 
+const modeSelect=document.getElementById("mode");
+const nameInput=document.getElementById("name");
+const phoneInput=document.getElementById("phone");
+const addressInput=document.getElementById("address");
+
+/* =========================
+   HELPERS
+========================= */
 function saveCart(){
 localStorage.setItem("am_cart",JSON.stringify(cart));
 renderCart();
 }
 
+function cartTotal(){
+return Object.entries(cart).reduce((total,[id,qty])=>{
+const p=PRODUCTS.find(x=>x.id===id);
+return total + (p.price*qty);
+},0);
+}
+
+function cartCountTotal(){
+return Object.values(cart).reduce((a,b)=>a+b,0);
+}
+
+/* =========================
+   PRODUITS
+========================= */
 function renderProducts(){
 productsDiv.innerHTML="";
 PRODUCTS.forEach(p=>{
 const div=document.createElement("div");
 div.className="bg-card p-4 rounded-xl flex justify-between items-center";
+
 div.innerHTML=`
 <div>
 <div class="font-bold">${p.name}</div>
@@ -132,20 +163,30 @@ div.innerHTML=`
 Ajouter
 </button>
 `;
+
 div.querySelector("button").onclick=()=>{
 cart[p.id]=(cart[p.id]||0)+1;
 saveCart();
 };
+
 productsDiv.appendChild(div);
 });
 }
 
+/* =========================
+   CART BAR
+========================= */
 function renderCart(){
-const count=Object.values(cart).reduce((a,b)=>a+b,0);
+const count=cartCountTotal();
 cartCount.textContent=count;
-cartInfo.textContent=count+" article(s)";
+cartInfo.textContent=count>0
+? count+" article(s) • "+cartTotal()+" €"
+: "Panier vide";
 }
 
+/* =========================
+   SHEET
+========================= */
 function openSheet(){
 overlay.classList.remove("hidden");
 sheet.classList.remove("translate-y-full");
@@ -157,35 +198,139 @@ overlay.classList.add("hidden");
 sheet.classList.add("translate-y-full");
 }
 
+/* =========================
+   RENDER SHEET
+========================= */
 function renderSheet(){
+
 cartItems.innerHTML="";
-Object.entries(cart).forEach(([id,qty])=>{
-const p=PRODUCTS.find(x=>x.id===id);
-const div=document.createElement("div");
-div.className="flex justify-between bg-bg p-3 rounded-xl";
-div.innerHTML=`
-<div>${p.name} x${qty}</div>
-<div>${p.price*qty} €</div>
-`;
-cartItems.appendChild(div);
-});
+
+if(cartCountTotal()===0){
+cartItems.innerHTML="<div class='text-center opacity-60'>Panier vide</div>";
+return;
 }
 
-function buildMessage(){
-let txt="📦 Commande AM Shop\n\n";
 Object.entries(cart).forEach(([id,qty])=>{
 const p=PRODUCTS.find(x=>x.id===id);
-txt+=`• ${p.name} x${qty}\n`;
+const lineTotal=p.price*qty;
+
+const div=document.createElement("div");
+div.className="bg-bg p-4 rounded-xl space-y-3";
+
+div.innerHTML=`
+<div class="flex justify-between">
+<div class="font-bold">${p.name}</div>
+<div>${lineTotal} €</div>
+</div>
+
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<button class="dec bg-card px-3 rounded">-</button>
+<span>${qty}</span>
+<button class="inc bg-card px-3 rounded">+</button>
+</div>
+<button class="remove text-red-400 text-sm">Retirer</button>
+</div>
+`;
+
+div.querySelector(".inc").onclick=()=>{
+cart[id]++;
+saveCart();
+renderSheet();
+};
+
+div.querySelector(".dec").onclick=()=>{
+cart[id]--;
+if(cart[id]<=0) delete cart[id];
+saveCart();
+renderSheet();
+};
+
+div.querySelector(".remove").onclick=()=>{
+delete cart[id];
+saveCart();
+renderSheet();
+};
+
+cartItems.appendChild(div);
 });
+
+/* TOTAL */
+const totalDiv=document.createElement("div");
+totalDiv.className="border-t border-white/10 pt-4 text-right font-bold text-lg";
+totalDiv.innerHTML="Total : "+cartTotal()+" €";
+cartItems.appendChild(totalDiv);
+
+}
+
+/* =========================
+   MODE UI
+========================= */
+modeSelect.onchange=()=>{
+if(modeSelect.value==="LIVRAISON"){
+addressInput.classList.remove("hidden");
+}else{
+addressInput.classList.add("hidden");
+}
+};
+
+/* =========================
+   BUILD MESSAGE
+========================= */
+function buildMessage(){
+
+let txt="📦 Commande AM Shop\n\n";
+
+Object.entries(cart).forEach(([id,qty])=>{
+const p=PRODUCTS.find(x=>x.id===id);
+txt+=`• ${p.name} x${qty} = ${p.price*qty} €\n`;
+});
+
+txt+=`\n💰 Total : ${cartTotal()} €\n\n`;
+
+txt+="📍 Infos client\n";
+txt+=`Mode : ${modeSelect.value}\n`;
+txt+=`Nom : ${nameInput.value||"-"}\n`;
+txt+=`Téléphone : ${phoneInput.value||"-"}\n`;
+
+if(modeSelect.value==="LIVRAISON"){
+txt+=`Adresse : ${addressInput.value||"-"}\n`;
+}
+
 return txt;
 }
 
+/* =========================
+   ORDER
+========================= */
 document.getElementById("orderBtn").onclick=()=>{
+
+if(cartCountTotal()===0){
+alert("Panier vide");
+return;
+}
+
+if(!nameInput.value || !phoneInput.value){
+alert("Nom et téléphone obligatoires");
+return;
+}
+
+if(modeSelect.value==="LIVRAISON" && !addressInput.value){
+alert("Adresse requise pour livraison");
+return;
+}
+
 const message=buildMessage();
-const username="TON_USERNAME";
-window.open(`https://t.me/${username}?text=${encodeURIComponent(message)}`);
+
+window.open(
+`https://t.me/${CONTACT_USERNAME}?text=${encodeURIComponent(message)}`
+);
+
 };
 
+/* =========================
+   INIT
+========================= */
 cartBar.onclick=openSheet;
 overlay.onclick=closeSheet;
 
