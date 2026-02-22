@@ -11,206 +11,618 @@
 
 <script>
 tailwind.config = {
-  darkMode:'class',
-  theme:{
-    extend:{
-      colors:{
-        bg0:'#05070D',
-        bg1:'#0B1020',
-        glass:'rgba(255,255,255,.06)',
-        glass2:'rgba(255,255,255,.09)',
-        stroke:'rgba(255,255,255,.10)',
-        text:'rgba(250,253,255,.96)',
-        muted:'rgba(250,253,255,.66)',
-        muted2:'rgba(250,253,255,.48)',
-        accent:'#FFD400',
-        accent2:'#FFB800',
-        good:'#2EE59D',
-        bad:'#FF4D4D'
-      }
-    }
-  }
+darkMode:'class',
+theme:{
+extend:{
+colors:{
+bg0:'#05070D',
+bg1:'#0B1020',
+bg2:'#11172A',
+glass:'rgba(255,255,255,.06)',
+glass2:'rgba(255,255,255,.09)',
+stroke:'rgba(255,255,255,.10)',
+text:'rgba(250,253,255,.96)',
+muted:'rgba(250,253,255,.66)',
+muted2:'rgba(250,253,255,.48)',
+accent:'#FFD400',
+accent2:'#FFB800',
+good:'#2EE59D',
+bad:'#FF4D4D'
+},
+boxShadow:{
+glow:'0 0 40px rgba(255,212,0,.25)'
+},
+animation:{
+float:'float 8s ease-in-out infinite',
+pulseSoft:'pulseSoft 3s ease-in-out infinite'
+},
+keyframes:{
+float:{
+'0%,100%':{transform:'translateY(0)'},
+'50%':{transform:'translateY(-20px)'}
+},
+pulseSoft:{
+'0%,100%':{opacity:.6},
+'50%':{opacity:1}
+}
+}
+}
+}
 }
 </script>
+
+<style>
+::-webkit-scrollbar{height:6px;width:6px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:10px}
+</style>
 </head>
 
-<body class="min-h-screen bg-[linear-gradient(180deg,#05070D,#0B1020)] text-text font-sans">
+<body class="min-h-screen bg-bg0 text-text font-sans overflow-x-hidden">
 
-<div class="relative z-10 mx-auto max-w-[980px] px-4 pb-32 pt-6">
+<!-- BACKGROUND ORBS -->
+<div class="fixed inset-0 -z-10 overflow-hidden">
+<div class="absolute w-[500px] h-[500px] bg-accent/20 blur-[120px] rounded-full top-[-150px] left-[-150px] animate-float"></div>
+<div class="absolute w-[400px] h-[400px] bg-accent2/20 blur-[120px] rounded-full bottom-[-150px] right-[-150px] animate-float"></div>
+</div>
 
-<!-- HEADER -->
-<header class="mb-4">
-  <h1 class="text-2xl font-black tracking-wide">AM Shop</h1>
-  <p class="text-muted text-sm">Catalogue premium • Commande en privé</p>
+<div class="relative z-10 max-w-[1000px] mx-auto px-4 pb-40 pt-6">
+
+<header class="mb-6">
+<h1 class="text-3xl font-black tracking-wide">AM Shop</h1>
+<p class="text-muted text-sm mt-1">Catalogue premium • Commande sécurisée Telegram</p>
 </header>
 
-<!-- SEARCH -->
 <div class="mb-4">
-  <input id="q"
-    type="search"
-    placeholder="Recherche : produit, référence, tag…"
-    class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none"/>
+<input id="q" type="search"
+placeholder="Rechercher un produit, référence, tag…"
+class="w-full px-4 py-3 rounded-xl bg-glass border border-stroke outline-none focus:border-accent"/>
 </div>
 
-<!-- FILTERS -->
-<div id="chipsRow" class="flex gap-2 overflow-x-auto mb-4"></div>
+<div id="chipsRow" class="flex gap-2 overflow-x-auto pb-2 mb-4"></div>
 
-<!-- LIST -->
-<div class="flex items-center justify-between mb-2">
-  <div class="font-black text-sm">Catalogue</div>
-  <div id="countInfo" class="text-xs text-muted">—</div>
+<div class="flex justify-between items-center mb-3">
+<div class="font-black text-sm tracking-wide">Catalogue</div>
+<div id="countInfo" class="text-xs text-muted"></div>
 </div>
 
-<div id="list" class="flex flex-col gap-3"></div>
+<div id="list" class="grid md:grid-cols-2 gap-4"></div>
 
-<div id="emptyState" class="hidden text-center text-muted text-sm mt-4">
-  Aucun produit trouvé.
+<div id="emptyState" class="hidden text-center text-muted text-sm mt-6">
+Aucun produit trouvé.
 </div>
 
 </div>
+<!-- ================= BOTTOM CART BAR ================= -->
 
-<!-- BOTTOM CART BAR -->
-<div class="fixed bottom-0 left-0 right-0 bg-bg1 border-t border-white/10 px-4 py-3">
-  <div class="max-w-[980px] mx-auto flex justify-between items-center">
-    <div>
-      <div class="font-black text-sm">🛒 Panier</div>
-      <div id="cartHint" class="text-xs text-muted">Aucun article</div>
-    </div>
-    <div id="cartCountBadge"
-      class="px-3 py-1 rounded-full bg-accent text-black font-black">0</div>
-  </div>
+<div id="bottomBar"
+class="fixed bottom-0 left-0 right-0 bg-bg1 border-t border-stroke px-4 py-3 transition-all">
+
+<div class="max-w-[1000px] mx-auto flex justify-between items-center">
+
+<button id="openCart"
+class="flex items-center gap-3">
+
+<div class="font-black text-sm">🛒 Panier</div>
+
+<div id="cartHint"
+class="text-xs text-muted">Aucun article</div>
+
+</button>
+
+<div id="cartBadge"
+class="min-w-[36px] text-center px-3 py-1 rounded-full bg-accent text-black font-black shadow-glow">
+0
 </div>
+
+</div>
+</div>
+
+
+<!-- ================= BOTTOM SHEET ================= -->
+
+<div id="sheetMask"
+class="fixed inset-0 bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-all"></div>
+
+<div id="sheet"
+class="fixed left-0 right-0 -bottom-full bg-bg2 border-t border-stroke rounded-t-2xl shadow-2xl transition-all duration-300 max-h-[92vh] flex flex-col">
+
+<div class="p-4 border-b border-stroke flex justify-between items-center">
+
+<div class="font-black text-lg">Votre commande</div>
+
+<button id="closeSheet"
+class="text-muted hover:text-white text-xl">✕</button>
+
+</div>
+
+
+<div class="flex-1 overflow-y-auto p-4 space-y-6">
+
+<!-- CART ITEMS -->
+<div>
+<div class="font-bold mb-3 text-sm tracking-wide">Articles</div>
+<div id="cartList" class="space-y-3"></div>
+<div id="cartEmpty"
+class="hidden text-muted text-sm text-center mt-4">
+Panier vide.
+</div>
+</div>
+
+<!-- TOTAL -->
+<div class="flex justify-between items-center pt-4 border-t border-stroke">
+<div class="font-bold">Total estimé</div>
+<div id="cartTotal" class="font-black text-lg"></div>
+</div>
+
+<!-- FORM -->
+<div class="space-y-4 pt-6 border-t border-stroke">
+
+<div class="font-bold text-sm tracking-wide">Informations</div>
+
+<select id="mode"
+class="w-full px-4 py-3 rounded-xl bg-glass border border-stroke outline-none">
+<option value="LIVRAISON">Livraison</option>
+<option value="SUR_PLACE">Sur place</option>
+<option value="COLIS">Colis</option>
+</select>
+
+<input id="zone"
+type="text"
+placeholder="Zone / Département"
+class="w-full px-4 py-3 rounded-xl bg-glass border border-stroke outline-none"/>
+
+<input id="fullname"
+type="text"
+placeholder="Nom complet"
+class="w-full px-4 py-3 rounded-xl bg-glass border border-stroke outline-none"/>
+
+<input id="phone"
+type="tel"
+placeholder="Téléphone"
+class="w-full px-4 py-3 rounded-xl bg-glass border border-stroke outline-none"/>
+
+<input id="address"
+type="text"
+placeholder="Adresse complète"
+class="w-full px-4 py-3 rounded-xl bg-glass border border-stroke outline-none"/>
+
+<textarea id="note"
+rows="3"
+placeholder="Note (facultatif)"
+class="w-full px-4 py-3 rounded-xl bg-glass border border-stroke outline-none resize-none"></textarea>
+
+<button id="sendOrder"
+class="w-full py-3 rounded-xl bg-gradient-to-br from-accent to-accent2 text-black font-black shadow-glow">
+Envoyer la commande
+</button>
+
+</div>
+
+</div>
+</div>
+
+
+<!-- ================= TOAST ================= -->
+
+<div id="toast"
+class="fixed bottom-24 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl bg-glass border border-stroke text-sm opacity-0 pointer-events-none transition-all">
+Message copié.
+</div>
+
 
 <script>
 
-/* ================= DATA ================= */
-
-const PRODUCTS = [
-  {id:"AM-01",name:"Mousseux",category:"Catalogue",origin:"🇲🇦",quality:"Premium",price:10,desc:"Exemple",tags:["Nouveau"]},
-  {id:"AM-02",name:"Frozen",category:"Catalogue",origin:"🇳🇱",quality:"Premium",price:15,desc:"Exemple",tags:["Stock limité"]},
-  {id:"AM-03",name:"Cali US",category:"Catalogue",origin:"🇺🇸",quality:"Premium",price:20,desc:"Exemple",tags:[]}
-];
+/* ================= STATE EXTENSION ================= */
 
 const CONTACT_USERNAME = "AMShopContact";
-const CART_KEY = "amshop_cart_v1";
-const FORM_KEY = "amshop_form_v1";
-
-/* ================= TELEGRAM INIT ================= */
+const CART_KEY = "amshop_cart_v2";
+const FORM_KEY = "amshop_form_v2";
 
 const tg = window.Telegram?.WebApp;
 tg?.ready();
 tg?.expand();
 
-/* ================= STATE ================= */
-
-const state = {
-  q:"",
-  filter:"ALL",
-  cart: JSON.parse(localStorage.getItem(CART_KEY) || "{}"),
-  form: JSON.parse(localStorage.getItem(FORM_KEY) || JSON.stringify({
-    mode:"LIVRAISON",
-    zone:"59",
-    fullname:"",
-    phone:"",
-    address:"",
-    note:""
-  }))
+const state = window.state || {
+q:"",
+filter:"ALL",
+cart:JSON.parse(localStorage.getItem(CART_KEY)||"{}"),
+form:JSON.parse(localStorage.getItem(FORM_KEY)||JSON.stringify({
+mode:"LIVRAISON",
+zone:"",
+fullname:"",
+phone:"",
+address:"",
+note:""
+}))
 };
 
 /* ================= HELPERS ================= */
 
-function saveCart(){ localStorage.setItem(CART_KEY, JSON.stringify(state.cart)); }
-function saveForm(){ localStorage.setItem(FORM_KEY, JSON.stringify(state.form)); }
+function saveCart(){localStorage.setItem(CART_KEY,JSON.stringify(state.cart))}
+function saveForm(){localStorage.setItem(FORM_KEY,JSON.stringify(state.form))}
 
-function money(n){ return Number(n||0).toFixed(2)+" €"; }
+function money(n){return Number(n||0).toFixed(2)+" €"}
 
 function cartItems(){
-  return Object.entries(state.cart).map(([id,qty])=>{
-    const p = PRODUCTS.find(x=>x.id===id);
-    if(!p) return null;
-    return {p,qty};
-  }).filter(Boolean);
+return Object.entries(state.cart).map(([id,qty])=>{
+const p=PRODUCTS.find(x=>x.id===id);
+if(!p)return null;
+return{p,qty};
+}).filter(Boolean)
 }
 
 function cartTotal(){
-  return cartItems().reduce((s,i)=>s+i.p.price*i.qty,0);
+return cartItems().reduce((s,i)=>s+i.p.price*i.qty,0)
 }
 
 function cartCount(){
-  return Object.values(state.cart).reduce((a,b)=>a+Number(b||0),0);
+return Object.values(state.cart).reduce((a,b)=>a+Number(b||0),0)
 }
 
-/* ================= RENDER ================= */
+/* ================= DOM ================= */
 
-const el = {
-  q:document.getElementById("q"),
-  list:document.getElementById("list"),
-  countInfo:document.getElementById("countInfo"),
-  empty:document.getElementById("emptyState"),
-  cartHint:document.getElementById("cartHint"),
-  cartCount:document.getElementById("cartCountBadge")
+const sheet=document.getElementById("sheet");
+const sheetMask=document.getElementById("sheetMask");
+const openCart=document.getElementById("openCart");
+const closeSheet=document.getElementById("closeSheet");
+const cartList=document.getElementById("cartList");
+const cartEmpty=document.getElementById("cartEmpty");
+const cartTotalEl=document.getElementById("cartTotal");
+const cartHint=document.getElementById("cartHint");
+const cartBadge=document.getElementById("cartBadge");
+const toast=document.getElementById("toast");
+
+/* ================= SHEET CONTROL ================= */
+
+function openSheet(){
+sheet.style.bottom="0";
+sheetMask.classList.remove("opacity-0","pointer-events-none");
+tg?.BackButton.show();
+}
+
+function closeSheetFn(){
+sheet.style.bottom="-100%";
+sheetMask.classList.add("opacity-0","pointer-events-none");
+tg?.BackButton.hide();
+}
+
+openCart.onclick=openSheet;
+closeSheet.onclick=closeSheetFn;
+sheetMask.onclick=closeSheetFn;
+tg?.BackButton.onClick(closeSheetFn);
+
+/* ================= RENDER CART ================= */
+
+function renderCart(){
+
+const items=cartItems();
+
+cartList.innerHTML="";
+
+if(!items.length){
+cartEmpty.classList.remove("hidden");
+}else{
+cartEmpty.classList.add("hidden");
+}
+
+items.forEach(({p,qty})=>{
+
+const row=document.createElement("div");
+row.className="p-3 rounded-xl bg-glass border border-stroke flex justify-between items-center";
+
+row.innerHTML=`
+<div>
+<div class="font-bold text-sm">${p.name}</div>
+<div class="text-xs text-muted">${money(p.price)} × ${qty}</div>
+</div>
+
+<div class="flex items-center gap-2">
+<button class="dec px-2 py-1 bg-glass2 rounded">−</button>
+<button class="inc px-2 py-1 bg-glass2 rounded">+</button>
+<button class="rem px-2 py-1 bg-bad/20 text-bad rounded">✕</button>
+</div>
+`;
+
+row.querySelector(".dec").onclick=()=>{
+state.cart[p.id]=Math.max(0,qty-1);
+if(state.cart[p.id]===0)delete state.cart[p.id];
+saveCart();
+renderCart();
+renderBottom();
 };
 
-function render(){
-  const filtered = PRODUCTS.filter(p=>{
-    const blob = (p.name+p.id+(p.tags||[]).join(" ")).toLowerCase();
-    return blob.includes(state.q.toLowerCase());
-  });
+row.querySelector(".inc").onclick=()=>{
+state.cart[p.id]=qty+1;
+saveCart();
+renderCart();
+renderBottom();
+};
 
-  el.list.innerHTML="";
-  el.countInfo.textContent=filtered.length+" produit(s)";
+row.querySelector(".rem").onclick=()=>{
+delete state.cart[p.id];
+saveCart();
+renderCart();
+renderBottom();
+};
 
-  if(!filtered.length){
-    el.empty.classList.remove("hidden");
-  } else {
-    el.empty.classList.add("hidden");
-  }
-
-  filtered.forEach(p=>{
-    const qty = state.cart[p.id]||0;
-
-    const card=document.createElement("div");
-    card.className="p-4 rounded-xl border border-white/10 bg-white/5";
-
-    card.innerHTML=`
-      <div class="flex justify-between">
-        <div>
-          <div class="font-black">${p.name}</div>
-          <div class="text-sm text-muted">${p.origin}</div>
-        </div>
-        <div class="font-black">${money(p.price)}</div>
-      </div>
-
-      <button class="mt-3 w-full bg-gradient-to-br from-accent to-accent2 text-black font-black p-2 rounded-xl">
-        ${qty>0?"✔ Ajouté x"+qty:"+ Ajouter au panier"}
-      </button>
-    `;
-
-    card.querySelector("button").onclick=()=>{
-      state.cart[p.id]=(state.cart[p.id]||0)+1;
-      saveCart();
-      render();
-    };
-
-    el.list.appendChild(card);
-  });
-
-  const count = cartCount();
-  el.cartCount.textContent=count;
-  el.cartHint.textContent = count
-    ? `${count} article(s) • ${money(cartTotal())}`
-    : "Aucun article";
-}
-
-/* ================= EVENTS ================= */
-
-el.q.addEventListener("input",()=>{
-  state.q=el.q.value;
-  render();
+cartList.appendChild(row);
 });
 
-render();
+cartTotalEl.textContent=money(cartTotal());
+}
+
+/* ================= BOTTOM BAR ================= */
+
+function renderBottom(){
+const count=cartCount();
+cartBadge.textContent=count;
+cartHint.textContent=count?
+`${count} article(s) • ${money(cartTotal())}`
+:"Aucun article";
+}
+
+/* ================= TOAST ================= */
+
+function showToast(msg){
+toast.textContent=msg;
+toast.classList.remove("opacity-0","pointer-events-none");
+setTimeout(()=>{
+toast.classList.add("opacity-0","pointer-events-none");
+},2000);
+}
+
+/* ================= FORM ================= */
+
+const modeEl=document.getElementById("mode");
+const zoneEl=document.getElementById("zone");
+const fullnameEl=document.getElementById("fullname");
+const phoneEl=document.getElementById("phone");
+const addressEl=document.getElementById("address");
+const noteEl=document.getElementById("note");
+const sendBtn=document.getElementById("sendOrder");
+
+modeEl.value=state.form.mode;
+zoneEl.value=state.form.zone;
+fullnameEl.value=state.form.fullname;
+phoneEl.value=state.form.phone;
+addressEl.value=state.form.address;
+noteEl.value=state.form.note;
+
+modeEl.onchange=()=>{
+state.form.mode=modeEl.value;
+saveForm();
+toggleAddress();
+};
+
+function toggleAddress(){
+if(state.form.mode==="LIVRAISON"){
+addressEl.classList.remove("hidden");
+}else{
+addressEl.classList.add("hidden");
+}
+}
+
+toggleAddress();
+
+[zoneEl,fullnameEl,phoneEl,addressEl,noteEl].forEach(input=>{
+input.oninput=()=>{
+state.form[input.id]=input.value;
+saveForm();
+};
+});
+
+/* ================= SEND ORDER ================= */
+
+sendBtn.onclick=()=>{
+
+if(!cartCount()){
+showToast("Panier vide.");
+return;
+}
+
+if(state.form.fullname.length<2){
+showToast("Nom invalide.");
+return;
+}
+
+if(state.form.phone.length<6){
+showToast("Téléphone invalide.");
+return;
+}
+
+if(state.form.mode==="LIVRAISON" && state.form.address.length<5){
+showToast("Adresse requise.");
+return;
+}
+
+let text=`📦 Ma Commande AM Shop\n\n`;
+text+="🛒 Produits :\n";
+
+cartItems().forEach(({p,qty})=>{
+text+=`• ${p.name} (${p.id}) ×${qty} = ${money(p.price*qty)}\n`;
+});
+
+text+=`\n💰 Total : ${money(cartTotal())}\n\n`;
+text+=`🚚 Mode : ${state.form.mode}\n`;
+text+=`📍 Zone : ${state.form.zone}\n`;
+text+=`👤 Nom : ${state.form.fullname}\n`;
+text+=`📞 Téléphone : ${state.form.phone}\n`;
+
+if(state.form.mode==="LIVRAISON"){
+text+=`🏠 Adresse : ${state.form.address}\n`;
+}
+
+if(state.form.note){
+text+=`📝 Note : ${state.form.note}\n`;
+}
+
+const url=`https://t.me/${CONTACT_USERNAME}?text=${encodeURIComponent(text)}`;
+
+navigator.clipboard.writeText(text).catch(()=>{});
+window.open(url,"_blank");
+
+tg?.HapticFeedback.impactOccurred("medium");
+showToast("Commande prête dans Telegram.");
+};
+
+/* INIT */
+
+renderCart();
+renderBottom();
 
 </script>
+<script>
+
+/* ================= FILTERS SETUP ================= */
+
+const chipsRow = document.getElementById("chipsRow");
+const listEl = document.getElementById("list");
+const emptyState = document.getElementById("emptyState");
+const countInfo = document.getElementById("countInfo");
+const searchInput = document.getElementById("q");
+
+/* Build dynamic filters */
+function buildChips(){
+
+chipsRow.innerHTML="";
+
+const categories=[...new Set(PRODUCTS.map(p=>p.category||"Catalogue"))];
+const origins=[...new Set(PRODUCTS.map(p=>p.origin))];
+const tags=[...new Set(PRODUCTS.flatMap(p=>p.tags||[]))];
+
+function createChip(label,value,type="CAT"){
+const chip=document.createElement("button");
+chip.className="px-3 py-1 rounded-full bg-glass border border-stroke text-xs whitespace-nowrap transition-all";
+chip.textContent=label;
+
+chip.onclick=()=>{
+state.filter={type,value};
+renderCatalogue();
+};
+
+chipsRow.appendChild(chip);
+}
+
+/* Reset */
+createChip("Tout","ALL","ALL");
+
+/* Categories */
+categories.forEach(c=>createChip(c,c,"CAT"));
+
+/* Origins */
+origins.forEach(o=>createChip(o,o,"ORI"));
+
+/* Tags */
+tags.forEach(t=>createChip("#"+t,t,"TAG"));
+
+}
+
+/* ================= CATALOGUE RENDER ================= */
+
+function renderCatalogue(){
+
+let filtered=[...PRODUCTS];
+
+/* Search */
+if(state.q){
+filtered=filtered.filter(p=>{
+const blob=(p.name+p.id+(p.tags||[]).join(" ")).toLowerCase();
+return blob.includes(state.q.toLowerCase());
+});
+}
+
+/* Filter */
+if(state.filter && state.filter.value!=="ALL"){
+if(state.filter.type==="CAT"){
+filtered=filtered.filter(p=>p.category===state.filter.value);
+}
+if(state.filter.type==="ORI"){
+filtered=filtered.filter(p=>p.origin===state.filter.value);
+}
+if(state.filter.type==="TAG"){
+filtered=filtered.filter(p=>(p.tags||[]).includes(state.filter.value));
+}
+}
+
+listEl.innerHTML="";
+
+countInfo.textContent=`${filtered.length} produit(s)`;
+
+if(!filtered.length){
+emptyState.classList.remove("hidden");
+}else{
+emptyState.classList.add("hidden");
+}
+
+filtered.forEach(p=>{
+
+const qty=state.cart[p.id]||0;
+
+const card=document.createElement("div");
+card.className="relative p-4 rounded-2xl bg-glass border border-stroke backdrop-blur-xl hover:border-accent/40 transition-all";
+
+card.innerHTML=`
+<div class="flex justify-between items-start mb-3">
+<div>
+<div class="font-black text-lg">${p.name}</div>
+<div class="text-xs text-muted mt-1">${p.origin} • ${p.quality||""}</div>
+</div>
+<div class="font-black text-lg">${money(p.price)}</div>
+</div>
+
+<div class="text-xs text-muted mb-3">${p.desc||""}</div>
+
+<div class="flex flex-wrap gap-2 mb-4">
+${(p.tags||[]).map(t=>`<span class="px-2 py-1 rounded-full bg-accent/10 text-accent text-[10px]">${t}</span>`).join("")}
+</div>
+
+<button class="addBtn w-full py-2 rounded-xl font-black bg-gradient-to-br from-accent to-accent2 text-black shadow-glow transition-all">
+${qty>0 ? "✔ Ajouté x"+qty : "+ Ajouter au panier"}
+</button>
+`;
+
+card.querySelector(".addBtn").onclick=()=>{
+state.cart[p.id]=(state.cart[p.id]||0)+1;
+saveCart();
+renderCatalogue();
+renderCart();
+renderBottom();
+tg?.HapticFeedback.impactOccurred("light");
+};
+
+listEl.appendChild(card);
+
+});
+
+}
+
+/* ================= SEARCH ================= */
+
+searchInput.addEventListener("input",()=>{
+state.q=searchInput.value;
+renderCatalogue();
+});
+
+/* ================= ESC HANDLING ================= */
+
+document.addEventListener("keydown",e=>{
+if(e.key==="Escape"){
+closeSheetFn();
+}
+});
+
+/* ================= INIT ================= */
+
+if(!state.filter){
+state.filter={type:"ALL",value:"ALL"};
+}
+
+buildChips();
+renderCatalogue();
+renderCart();
+renderBottom();
+
+</script>
+
 </body>
 </html>
