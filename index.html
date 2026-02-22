@@ -1,363 +1,193 @@
 <!DOCTYPE html>
 <html lang="fr" class="dark">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<meta name="color-scheme" content="dark"/>
-<title>AM Shop — Mini App</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AM Shop</title>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 
 <script>
 tailwind.config = {
-darkMode:'class',
+darkMode:"class",
 theme:{
 extend:{
 colors:{
-bg0:'#05070D',
-bg1:'#0B1020',
-bg2:'#11172A',
-glass:'rgba(255,255,255,.06)',
-glass2:'rgba(255,255,255,.09)',
-stroke:'rgba(255,255,255,.10)',
-text:'rgba(250,253,255,.96)',
-muted:'rgba(250,253,255,.66)',
-accent:'#FFD400',
-accent2:'#FFB800',
-good:'#2EE59D',
-bad:'#FF4D4D'
-},
-boxShadow:{
-glow:'0 0 40px rgba(255,212,0,.25)'
+bg:"#0B1020",
+card:"#111827",
+accent:"#FFD400",
+accent2:"#FFB800"
 }
 }
 }
 }
 </script>
-
-<style>
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:10px}
-</style>
 </head>
 
-<body class="min-h-screen bg-bg0 text-text font-sans overflow-x-hidden">
+<body class="bg-bg text-white min-h-screen">
 
-<!-- Background -->
-<div class="fixed inset-0 -z-10 overflow-hidden">
-<div class="absolute w-[500px] h-[500px] bg-accent/20 blur-[120px] rounded-full -top-40 -left-40"></div>
-<div class="absolute w-[400px] h-[400px] bg-accent2/20 blur-[120px] rounded-full -bottom-40 -right-40"></div>
-</div>
+<div class="max-w-4xl mx-auto p-4 pb-32">
 
-<div class="relative z-10 max-w-[1000px] mx-auto px-4 pb-40 pt-6">
+<h1 class="text-3xl font-black mb-6">AM Shop</h1>
 
-<header class="mb-6">
-<h1 class="text-3xl font-black">AM Shop</h1>
-<p class="text-muted text-sm">Catalogue premium • Commande sécurisée Telegram</p>
-</header>
+<input id="search" placeholder="Recherche..."
+class="w-full p-3 rounded-xl bg-card mb-4 outline-none">
 
-<input id="search" type="search"
-placeholder="Recherche produit..."
-class="w-full mb-4 px-4 py-3 rounded-xl bg-glass border border-stroke outline-none"/>
-
-<div id="chips" class="flex gap-2 overflow-x-auto mb-4"></div>
-
-<div class="flex justify-between mb-2">
-<div class="font-black text-sm">Catalogue</div>
-<div id="countInfo" class="text-xs text-muted"></div>
-</div>
-
-<div id="products" class="grid md:grid-cols-2 gap-4"></div>
-<div id="empty" class="hidden text-center text-muted mt-6">Aucun produit trouvé.</div>
+<div id="products" class="grid gap-4"></div>
 
 </div>
 
-<!-- Bottom Bar -->
-<div class="fixed bottom-0 left-0 right-0 bg-bg1 border-t border-stroke p-4">
-<div class="max-w-[1000px] mx-auto flex justify-between items-center">
-<button id="openCart" class="flex gap-2 items-center">
-<span class="font-bold">🛒 Panier</span>
-<span id="cartHint" class="text-xs text-muted">Vide</span>
-</button>
-<div id="cartBadge" class="px-3 py-1 rounded-full bg-accent text-black font-black">0</div>
-</div>
+<!-- BOTTOM CART -->
+<div id="cartBar"
+class="fixed bottom-0 left-0 right-0 bg-card border-t border-white/10 p-4 flex justify-between items-center cursor-pointer">
+
+<div>
+<div class="font-bold">🛒 Panier</div>
+<div id="cartInfo" class="text-sm opacity-70">0 article</div>
 </div>
 
-<!-- Sheet -->
-<div id="mask" class="fixed inset-0 bg-black/60 opacity-0 pointer-events-none transition"></div>
+<div id="cartCount"
+class="bg-accent text-black font-bold px-3 py-1 rounded-full">
+0
+</div>
+
+</div>
+
+<!-- SHEET -->
+<div id="overlay"
+class="fixed inset-0 bg-black/60 hidden"></div>
 
 <div id="sheet"
-class="fixed left-0 right-0 -bottom-full bg-bg2 border-t border-stroke rounded-t-2xl transition-all max-h-[90vh] flex flex-col">
+class="fixed left-0 right-0 bottom-0 bg-card rounded-t-3xl p-6 translate-y-full transition-transform duration-300 max-h-[90vh] overflow-y-auto">
 
-<div class="p-4 border-b border-stroke flex justify-between">
-<div class="font-black">Votre commande</div>
-<button id="closeCart">✕</button>
-</div>
+<h2 class="text-xl font-black mb-4">Votre commande</h2>
 
-<div class="p-4 flex-1 overflow-y-auto space-y-6">
+<div id="cartItems" class="space-y-3 mb-4"></div>
 
-<div id="cartItems"></div>
-<div id="cartEmpty" class="hidden text-muted text-sm">Panier vide.</div>
+<div class="border-t border-white/10 pt-4 space-y-3">
 
-<div class="flex justify-between font-bold border-t border-stroke pt-4">
-<span>Total</span>
-<span id="cartTotal"></span>
-</div>
-
-<div class="space-y-3 border-t border-stroke pt-6">
-
-<select id="mode" class="w-full p-3 rounded-xl bg-glass border border-stroke">
+<select id="mode" class="w-full p-3 bg-bg rounded-xl">
 <option value="LIVRAISON">Livraison</option>
 <option value="SUR_PLACE">Sur place</option>
 <option value="COLIS">Colis</option>
 </select>
 
-<input id="fullname" placeholder="Nom complet"
-class="w-full p-3 rounded-xl bg-glass border border-stroke"/>
+<input id="name" placeholder="Nom"
+class="w-full p-3 bg-bg rounded-xl">
 
 <input id="phone" placeholder="Téléphone"
-class="w-full p-3 rounded-xl bg-glass border border-stroke"/>
+class="w-full p-3 bg-bg rounded-xl">
 
-<input id="address" placeholder="Adresse complète"
-class="w-full p-3 rounded-xl bg-glass border border-stroke"/>
+<input id="address" placeholder="Adresse"
+class="w-full p-3 bg-bg rounded-xl">
 
-<textarea id="note" rows="3"
-placeholder="Note (facultatif)"
-class="w-full p-3 rounded-xl bg-glass border border-stroke resize-none"></textarea>
-
-<button id="send"
-class="w-full p-3 rounded-xl bg-gradient-to-br from-accent to-accent2 text-black font-black shadow-glow">
-Envoyer la commande
+<button id="orderBtn"
+class="w-full bg-gradient-to-r from-accent to-accent2 text-black font-bold p-3 rounded-xl">
+Commander
 </button>
 
 </div>
-</div>
+
 </div>
 
 <script>
 
-/* ================= DATA ================= */
-
-const CONTACT_USERNAME = "AMShopContact";
+const tg = window.Telegram?.WebApp;
+tg?.ready();
+tg?.expand();
 
 const PRODUCTS = [
-{id:"AM-01",name:"Mousseux",origin:"🇲🇦",price:10,tags:["Nouveau"]},
-{id:"AM-02",name:"Frozen",origin:"🇳🇱",price:15,tags:["Top"]},
-{id:"AM-03",name:"Cali US",origin:"🇺🇸",price:20,tags:["Premium"]}
+{id:"A1",name:"Frozen",price:15},
+{id:"A2",name:"Cali US",price:20},
+{id:"A3",name:"Cali NL",price:10}
 ];
 
-/* ================= STATE ================= */
+let cart = JSON.parse(localStorage.getItem("am_cart")||"{}");
 
-const state={
-search:"",
-filter:"ALL",
-cart:JSON.parse(localStorage.getItem("am_cart")||"{}"),
-form:JSON.parse(localStorage.getItem("am_form")||JSON.stringify({
-mode:"LIVRAISON",
-fullname:"",
-phone:"",
-address:"",
-note:""
-}))
-};
+const productsDiv=document.getElementById("products");
+const cartBar=document.getElementById("cartBar");
+const sheet=document.getElementById("sheet");
+const overlay=document.getElementById("overlay");
+const cartItems=document.getElementById("cartItems");
+const cartInfo=document.getElementById("cartInfo");
+const cartCount=document.getElementById("cartCount");
 
-function save(){
-localStorage.setItem("am_cart",JSON.stringify(state.cart));
-localStorage.setItem("am_form",JSON.stringify(state.form));
+function saveCart(){
+localStorage.setItem("am_cart",JSON.stringify(cart));
+renderCart();
 }
-
-/* ================= HELPERS ================= */
-
-function money(n){return Number(n).toFixed(2)+" €";}
-function cartCount(){return Object.values(state.cart).reduce((a,b)=>a+b,0);}
-function cartTotal(){
-return Object.entries(state.cart).reduce((sum,[id,qty])=>{
-const p=PRODUCTS.find(x=>x.id===id);
-return sum+(p?p.price*qty:0);
-},0);
-}
-
-/* ================= RENDER PRODUCTS ================= */
-
-const productsEl=document.getElementById("products");
-const emptyEl=document.getElementById("empty");
-const countInfo=document.getElementById("countInfo");
 
 function renderProducts(){
-
-let list=PRODUCTS.filter(p=>{
-return p.name.toLowerCase().includes(state.search.toLowerCase());
-});
-
-productsEl.innerHTML="";
-countInfo.textContent=list.length+" produit(s)";
-
-if(!list.length){emptyEl.classList.remove("hidden");}
-else{emptyEl.classList.add("hidden");}
-
-list.forEach(p=>{
-
-const qty=state.cart[p.id]||0;
-
-const card=document.createElement("div");
-card.className="p-4 rounded-2xl bg-glass border border-stroke";
-
-card.innerHTML=`
-<div class="flex justify-between mb-2">
+productsDiv.innerHTML="";
+PRODUCTS.forEach(p=>{
+const div=document.createElement("div");
+div.className="bg-card p-4 rounded-xl flex justify-between items-center";
+div.innerHTML=`
 <div>
 <div class="font-bold">${p.name}</div>
-<div class="text-xs text-muted">${p.origin}</div>
+<div class="text-sm opacity-60">${p.price} €</div>
 </div>
-<div class="font-bold">${money(p.price)}</div>
-</div>
-
-<button class="add w-full mt-2 p-2 rounded-xl bg-accent text-black font-bold">
-${qty>0?"✔ Ajouté x"+qty:"+ Ajouter"}
+<button class="bg-accent text-black px-3 py-1 rounded-lg font-bold">
+Ajouter
 </button>
 `;
-
-card.querySelector(".add").onclick=()=>{
-state.cart[p.id]=(state.cart[p.id]||0)+1;
-save();
-renderProducts();
-renderCart();
+div.querySelector("button").onclick=()=>{
+cart[p.id]=(cart[p.id]||0)+1;
+saveCart();
 };
-
-productsEl.appendChild(card);
+productsDiv.appendChild(div);
 });
 }
-
-/* ================= CART ================= */
-
-const cartItemsEl=document.getElementById("cartItems");
-const cartEmptyEl=document.getElementById("cartEmpty");
-const cartTotalEl=document.getElementById("cartTotal");
-const cartBadge=document.getElementById("cartBadge");
-const cartHint=document.getElementById("cartHint");
 
 function renderCart(){
-
-cartItemsEl.innerHTML="";
-const entries=Object.entries(state.cart);
-
-if(!entries.length){
-cartEmptyEl.classList.remove("hidden");
-}else{
-cartEmptyEl.classList.add("hidden");
+const count=Object.values(cart).reduce((a,b)=>a+b,0);
+cartCount.textContent=count;
+cartInfo.textContent=count+" article(s)";
 }
 
-entries.forEach(([id,qty])=>{
-const p=PRODUCTS.find(x=>x.id===id);
-if(!p)return;
-
-const row=document.createElement("div");
-row.className="flex justify-between items-center bg-glass p-3 rounded-xl";
-
-row.innerHTML=`
-<div>
-<div class="font-bold text-sm">${p.name}</div>
-<div class="text-xs text-muted">${money(p.price)} × ${qty}</div>
-</div>
-<div class="flex gap-2">
-<button class="dec px-2 bg-glass2 rounded">-</button>
-<button class="inc px-2 bg-glass2 rounded">+</button>
-<button class="rem px-2 bg-bad/20 text-bad rounded">x</button>
-</div>
-`;
-
-row.querySelector(".dec").onclick=()=>{
-state.cart[id]=Math.max(0,qty-1);
-if(state.cart[id]===0)delete state.cart[id];
-save();
-renderProducts();
-renderCart();
-};
-
-row.querySelector(".inc").onclick=()=>{
-state.cart[id]=qty+1;
-save();
-renderProducts();
-renderCart();
-};
-
-row.querySelector(".rem").onclick=()=>{
-delete state.cart[id];
-save();
-renderProducts();
-renderCart();
-};
-
-cartItemsEl.appendChild(row);
-});
-
-cartTotalEl.textContent=money(cartTotal());
-cartBadge.textContent=cartCount();
-cartHint.textContent=cartCount()?cartCount()+" article(s)":"Vide";
+function openSheet(){
+overlay.classList.remove("hidden");
+sheet.classList.remove("translate-y-full");
+renderSheet();
 }
-
-/* ================= SHEET ================= */
-
-const sheet=document.getElementById("sheet");
-const mask=document.getElementById("mask");
-
-document.getElementById("openCart").onclick=()=>{
-sheet.style.bottom="0";
-mask.classList.remove("opacity-0","pointer-events-none");
-};
-
-document.getElementById("closeCart").onclick=closeSheet;
-mask.onclick=closeSheet;
 
 function closeSheet(){
-sheet.style.bottom="-100%";
-mask.classList.add("opacity-0","pointer-events-none");
+overlay.classList.add("hidden");
+sheet.classList.add("translate-y-full");
 }
 
-/* ================= FORM ================= */
-
-["mode","fullname","phone","address","note"].forEach(id=>{
-document.getElementById(id).value=state.form[id]||"";
-document.getElementById(id).oninput=(e)=>{
-state.form[id]=e.target.value;
-save();
-};
-});
-
-/* ================= SEND ================= */
-
-document.getElementById("send").onclick=()=>{
-
-if(!cartCount())return alert("Panier vide");
-if(state.form.fullname.length<2)return alert("Nom invalide");
-if(state.form.phone.length<6)return alert("Téléphone invalide");
-
-let text="📦 Ma Commande AM Shop\n\n";
-Object.entries(state.cart).forEach(([id,qty])=>{
+function renderSheet(){
+cartItems.innerHTML="";
+Object.entries(cart).forEach(([id,qty])=>{
 const p=PRODUCTS.find(x=>x.id===id);
-text+=`• ${p.name} x${qty} = ${money(p.price*qty)}\n`;
+const div=document.createElement("div");
+div.className="flex justify-between bg-bg p-3 rounded-xl";
+div.innerHTML=`
+<div>${p.name} x${qty}</div>
+<div>${p.price*qty} €</div>
+`;
+cartItems.appendChild(div);
 });
-text+=`\nTotal : ${money(cartTotal())}\n`;
-text+=`\nMode : ${state.form.mode}\n`;
-text+=`Nom : ${state.form.fullname}\n`;
-text+=`Téléphone : ${state.form.phone}\n`;
-if(state.form.mode==="LIVRAISON"){
-text+=`Adresse : ${state.form.address}\n`;
-}
-if(state.form.note){
-text+=`Note : ${state.form.note}\n`;
 }
 
-navigator.clipboard.writeText(text).catch(()=>{});
-window.open(`https://t.me/${CONTACT_USERNAME}?text=${encodeURIComponent(text)}`,"_blank");
+function buildMessage(){
+let txt="📦 Commande AM Shop\n\n";
+Object.entries(cart).forEach(([id,qty])=>{
+const p=PRODUCTS.find(x=>x.id===id);
+txt+=`• ${p.name} x${qty}\n`;
+});
+return txt;
+}
+
+document.getElementById("orderBtn").onclick=()=>{
+const message=buildMessage();
+const username="TON_USERNAME";
+window.open(`https://t.me/${username}?text=${encodeURIComponent(message)}`);
 };
 
-/* ================= INIT ================= */
-
-document.getElementById("search").oninput=(e)=>{
-state.search=e.target.value;
-renderProducts();
-};
+cartBar.onclick=openSheet;
+overlay.onclick=closeSheet;
 
 renderProducts();
 renderCart();
