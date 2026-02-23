@@ -97,15 +97,15 @@ const tg = window.Telegram?.WebApp;
 tg?.ready();
 tg?.expand();
 
-const CONTACT_USERNAME = "TON_USERNAME"; // <-- remplace ici
+const CONTACT_USERNAME = "TON_USERNAME";
 
 /* =========================
    PRODUITS
 ========================= */
 const PRODUCTS = [
-{id:"A1",name:"Frozen",price:15},
-{id:"A2",name:"Cali US",price:20},
-{id:"A3",name:"Cali NL",price:10}
+{id:"A1",name:"Frozen",price:15,rate:31,country:"USA"},
+{id:"A2",name:"Cali US",price:20,rate:28,country:"USA"},
+{id:"A3",name:"Cali NL",price:10,rate:24,country:"Pays-Bas"}
 ];
 
 /* =========================
@@ -146,20 +146,37 @@ return Object.values(cart).reduce((a,b)=>a+b,0);
 }
 
 /* =========================
-   PRODUITS
+   PRODUITS (AMÉLIORÉS)
 ========================= */
 function renderProducts(){
 productsDiv.innerHTML="";
+
 PRODUCTS.forEach(p=>{
+
 const div=document.createElement("div");
-div.className="bg-card p-4 rounded-xl flex justify-between items-center";
+div.className="bg-card p-5 rounded-2xl flex justify-between items-center shadow-lg border border-white/5";
 
 div.innerHTML=`
-<div>
-<div class="font-bold">${p.name}</div>
-<div class="text-sm opacity-60">${p.price} €</div>
+<div class="space-y-2">
+
+<div class="flex items-center gap-3">
+<div class="text-lg font-black">${p.name}</div>
+<div class="bg-accent text-black text-xs font-bold px-2 py-1 rounded-full">
+${p.rate}%
 </div>
-<button class="bg-accent text-black px-3 py-1 rounded-lg font-bold">
+</div>
+
+<div class="text-sm opacity-70">
+🌍 ${p.country}
+</div>
+
+<div class="text-sm font-semibold">
+${p.price} € <span class="opacity-60 text-xs">/ gramme</span>
+</div>
+
+</div>
+
+<button class="bg-gradient-to-r from-accent to-accent2 text-black px-4 py-2 rounded-xl font-bold hover:scale-105 transition">
 Ajouter
 </button>
 `;
@@ -255,12 +272,10 @@ renderSheet();
 cartItems.appendChild(div);
 });
 
-/* TOTAL */
 const totalDiv=document.createElement("div");
 totalDiv.className="border-t border-white/10 pt-4 text-right font-bold text-lg";
 totalDiv.innerHTML="Total : "+cartTotal()+" €";
 cartItems.appendChild(totalDiv);
-
 }
 
 /* =========================
@@ -328,9 +343,6 @@ window.open(
 
 };
 
-/* =========================
-   INIT
-========================= */
 cartBar.onclick=openSheet;
 overlay.onclick=closeSheet;
 
