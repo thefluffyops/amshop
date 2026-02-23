@@ -20,7 +20,7 @@ accent:"#FFD400",
 accent2:"#FFB800"
 },
 boxShadow:{
-soft:"0 10px 30px rgba(0,0,0,0.4)"
+soft:"0 20px 40px rgba(0,0,0,0.5)"
 }
 }
 }
@@ -29,28 +29,54 @@ soft:"0 10px 30px rgba(0,0,0,0.4)"
 
 <style>
 body{
-background: radial-gradient(circle at 20% 20%, #111827 0%, #0B1020 60%);
+background:
+radial-gradient(circle at 15% 20%, rgba(255,212,0,0.08), transparent 40%),
+radial-gradient(circle at 85% 80%, rgba(255,184,0,0.06), transparent 40%),
+linear-gradient(180deg,#0B1020 0%,#0F172A 100%);
+}
+
+/* Glow effect */
+.card-glow{
+position:relative;
+overflow:hidden;
+}
+.card-glow::before{
+content:"";
+position:absolute;
+top:-50%;
+left:-50%;
+width:200%;
+height:200%;
+background:radial-gradient(circle, rgba(255,212,0,0.08), transparent 40%);
+opacity:0;
+transition:opacity .4s;
+}
+.card-glow:hover::before{
+opacity:1;
 }
 </style>
-
 </head>
 
 <body class="text-white min-h-screen">
 
-<div class="max-w-4xl mx-auto p-4 pb-32">
+<div class="max-w-4xl mx-auto p-5 pb-40">
 
-<h1 class="text-3xl font-black mb-6 tracking-wide">AM Shop</h1>
-
-<input id="search" placeholder="Recherche..."
-class="w-full p-3 rounded-2xl bg-card mb-6 outline-none focus:ring-2 focus:ring-accent transition">
+<div class="mb-10">
+<h1 class="text-4xl font-black bg-gradient-to-r from-accent to-accent2 bg-clip-text text-transparent">
+AM Shop
+</h1>
+<p class="text-sm opacity-60 mt-1">
+Premium selection • Qualité supérieure
+</p>
+</div>
 
 <div id="products" class="grid gap-6"></div>
 
 </div>
 
-<!-- BOTTOM CART -->
+<!-- CART FLOATING -->
 <div id="cartBar"
-class="fixed bottom-0 left-0 right-0 bg-card/90 backdrop-blur-lg border-t border-white/10 p-4 flex justify-between items-center cursor-pointer shadow-soft">
+class="fixed bottom-6 left-4 right-4 bg-gradient-to-r from-card to-bg backdrop-blur-xl border border-white/10 p-4 flex justify-between items-center cursor-pointer shadow-soft rounded-2xl">
 
 <div>
 <div class="font-bold text-lg">🛒 Panier</div>
@@ -64,10 +90,11 @@ class="bg-accent text-black font-bold px-4 py-1 rounded-full shadow">
 
 </div>
 
-<!-- SHEET -->
+<!-- OVERLAY -->
 <div id="overlay"
 class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm"></div>
 
+<!-- SHEET -->
 <div id="sheet"
 class="fixed left-0 right-0 bottom-0 bg-card rounded-t-3xl p-6 translate-y-full transition-transform duration-300 max-h-[90vh] overflow-y-auto shadow-soft">
 
@@ -77,19 +104,10 @@ class="fixed left-0 right-0 bottom-0 bg-card rounded-t-3xl p-6 translate-y-full 
 
 <div class="border-t border-white/10 pt-4 space-y-3">
 
-<select id="mode" class="w-full p-3 bg-bg rounded-2xl">
-<option value="LIVRAISON">Livraison</option>
-<option value="SUR_PLACE">Sur place</option>
-<option value="COLIS">Colis</option>
-</select>
-
 <input id="name" placeholder="Nom"
 class="w-full p-3 bg-bg rounded-2xl">
 
 <input id="phone" placeholder="Téléphone"
-class="w-full p-3 bg-bg rounded-2xl">
-
-<input id="address" placeholder="Adresse"
 class="w-full p-3 bg-bg rounded-2xl">
 
 <button id="orderBtn"
@@ -109,18 +127,12 @@ tg?.expand();
 
 const CONTACT_USERNAME = "TON_USERNAME";
 
-/* =========================
-   PRODUITS
-========================= */
 const PRODUCTS = [
 {id:"A1",name:"Frozen",price:15,rate:31,country:"USA"},
 {id:"A2",name:"Cali US",price:20,rate:28,country:"USA"},
 {id:"A3",name:"Cali NL",price:10,rate:24,country:"Pays-Bas"}
 ];
 
-/* =========================
-   STATE
-========================= */
 let cart = JSON.parse(localStorage.getItem("am_cart")||"{}");
 
 const productsDiv=document.getElementById("products");
@@ -131,14 +143,6 @@ const cartItems=document.getElementById("cartItems");
 const cartInfo=document.getElementById("cartInfo");
 const cartCount=document.getElementById("cartCount");
 
-const modeSelect=document.getElementById("mode");
-const nameInput=document.getElementById("name");
-const phoneInput=document.getElementById("phone");
-const addressInput=document.getElementById("address");
-
-/* =========================
-   HELPERS
-========================= */
 function saveCart(){
 localStorage.setItem("am_cart",JSON.stringify(cart));
 renderCart();
@@ -155,9 +159,7 @@ function cartCountTotal(){
 return Object.values(cart).reduce((a,b)=>a+b,0);
 }
 
-/* =========================
-   PRODUITS UI PREMIUM
-========================= */
+/* PRODUCTS */
 function renderProducts(){
 productsDiv.innerHTML="";
 
@@ -166,7 +168,7 @@ PRODUCTS.forEach(p=>{
 const qty = cart[p.id] || 0;
 
 const div=document.createElement("div");
-div.className="bg-card/70 backdrop-blur-xl p-6 rounded-3xl shadow-soft border border-white/5 transition hover:scale-[1.02] duration-300";
+div.className="card-glow bg-card/70 backdrop-blur-xl p-6 rounded-3xl shadow-soft border border-white/5 transition hover:scale-[1.03] duration-300";
 
 div.innerHTML=`
 <div class="flex justify-between items-start">
@@ -235,9 +237,7 @@ productsDiv.appendChild(div);
 });
 }
 
-/* =========================
-   CART BAR
-========================= */
+/* CART BAR */
 function renderCart(){
 const count=cartCountTotal();
 cartCount.textContent=count;
@@ -246,9 +246,7 @@ cartInfo.textContent=count>0
 : "Panier vide";
 }
 
-/* =========================
-   SHEET
-========================= */
+/* SHEET */
 function openSheet(){
 overlay.classList.remove("hidden");
 sheet.classList.remove("translate-y-full");
@@ -260,67 +258,26 @@ overlay.classList.add("hidden");
 sheet.classList.add("translate-y-full");
 }
 
-/* =========================
-   RENDER SHEET
-========================= */
 function renderSheet(){
-
 cartItems.innerHTML="";
-
-if(cartCountTotal()===0){
-cartItems.innerHTML="<div class='text-center opacity-60'>Panier vide</div>";
-return;
-}
-
 Object.entries(cart).forEach(([id,qty])=>{
 const p=PRODUCTS.find(x=>x.id===id);
-const lineTotal=p.price*qty;
-
-const div=document.createElement("div");
-div.className="bg-bg p-4 rounded-2xl space-y-3";
-
-div.innerHTML=`
-<div class="flex justify-between">
-<div class="font-bold">${p.name}</div>
-<div>${lineTotal} €</div>
-</div>
+const line=document.createElement("div");
+line.className="flex justify-between bg-bg p-3 rounded-2xl";
+line.innerHTML=`
+<div>${p.name} x${qty}</div>
+<div>${p.price*qty} €</div>
 `;
-
-cartItems.appendChild(div);
+cartItems.appendChild(line);
 });
-
-const totalDiv=document.createElement("div");
-totalDiv.className="border-t border-white/10 pt-4 text-right font-bold text-lg";
-totalDiv.innerHTML="Total : "+cartTotal()+" €";
-cartItems.appendChild(totalDiv);
 }
 
-/* =========================
-   ORDER
-========================= */
 document.getElementById("orderBtn").onclick=()=>{
-
 if(cartCountTotal()===0){
 alert("Panier vide");
 return;
 }
-
-if(!nameInput.value || !phoneInput.value){
-alert("Nom et téléphone obligatoires");
-return;
-}
-
-if(modeSelect.value==="LIVRAISON" && !addressInput.value){
-alert("Adresse requise pour livraison");
-return;
-}
-
-const message="Commande AM Shop - Total : "+cartTotal()+" €";
-
-window.open(
-`https://t.me/${CONTACT_USERNAME}?text=${encodeURIComponent(message)}`
-);
-
+window.open(`https://t.me/${CONTACT_USERNAME}`);
 };
 
 cartBar.onclick=openSheet;
