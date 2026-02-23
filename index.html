@@ -18,37 +18,47 @@ bg:"#0B1020",
 card:"#111827",
 accent:"#FFD400",
 accent2:"#FFB800"
+},
+boxShadow:{
+soft:"0 10px 30px rgba(0,0,0,0.4)"
 }
 }
 }
 }
 </script>
+
+<style>
+body{
+background: radial-gradient(circle at 20% 20%, #111827 0%, #0B1020 60%);
+}
+</style>
+
 </head>
 
-<body class="bg-bg text-white min-h-screen">
+<body class="text-white min-h-screen">
 
 <div class="max-w-4xl mx-auto p-4 pb-32">
 
-<h1 class="text-3xl font-black mb-6">AM Shop</h1>
+<h1 class="text-3xl font-black mb-6 tracking-wide">AM Shop</h1>
 
 <input id="search" placeholder="Recherche..."
-class="w-full p-3 rounded-xl bg-card mb-4 outline-none">
+class="w-full p-3 rounded-2xl bg-card mb-6 outline-none focus:ring-2 focus:ring-accent transition">
 
-<div id="products" class="grid gap-4"></div>
+<div id="products" class="grid gap-6"></div>
 
 </div>
 
 <!-- BOTTOM CART -->
 <div id="cartBar"
-class="fixed bottom-0 left-0 right-0 bg-card border-t border-white/10 p-4 flex justify-between items-center cursor-pointer">
+class="fixed bottom-0 left-0 right-0 bg-card/90 backdrop-blur-lg border-t border-white/10 p-4 flex justify-between items-center cursor-pointer shadow-soft">
 
 <div>
-<div class="font-bold">🛒 Panier</div>
+<div class="font-bold text-lg">🛒 Panier</div>
 <div id="cartInfo" class="text-sm opacity-70">0 article</div>
 </div>
 
 <div id="cartCount"
-class="bg-accent text-black font-bold px-3 py-1 rounded-full">
+class="bg-accent text-black font-bold px-4 py-1 rounded-full shadow">
 0
 </div>
 
@@ -56,10 +66,10 @@ class="bg-accent text-black font-bold px-3 py-1 rounded-full">
 
 <!-- SHEET -->
 <div id="overlay"
-class="fixed inset-0 bg-black/60 hidden"></div>
+class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm"></div>
 
 <div id="sheet"
-class="fixed left-0 right-0 bottom-0 bg-card rounded-t-3xl p-6 translate-y-full transition-transform duration-300 max-h-[90vh] overflow-y-auto">
+class="fixed left-0 right-0 bottom-0 bg-card rounded-t-3xl p-6 translate-y-full transition-transform duration-300 max-h-[90vh] overflow-y-auto shadow-soft">
 
 <h2 class="text-xl font-black mb-4">Votre commande</h2>
 
@@ -67,23 +77,23 @@ class="fixed left-0 right-0 bottom-0 bg-card rounded-t-3xl p-6 translate-y-full 
 
 <div class="border-t border-white/10 pt-4 space-y-3">
 
-<select id="mode" class="w-full p-3 bg-bg rounded-xl">
+<select id="mode" class="w-full p-3 bg-bg rounded-2xl">
 <option value="LIVRAISON">Livraison</option>
 <option value="SUR_PLACE">Sur place</option>
 <option value="COLIS">Colis</option>
 </select>
 
 <input id="name" placeholder="Nom"
-class="w-full p-3 bg-bg rounded-xl">
+class="w-full p-3 bg-bg rounded-2xl">
 
 <input id="phone" placeholder="Téléphone"
-class="w-full p-3 bg-bg rounded-xl">
+class="w-full p-3 bg-bg rounded-2xl">
 
 <input id="address" placeholder="Adresse"
-class="w-full p-3 bg-bg rounded-xl">
+class="w-full p-3 bg-bg rounded-2xl">
 
 <button id="orderBtn"
-class="w-full bg-gradient-to-r from-accent to-accent2 text-black font-bold p-3 rounded-xl">
+class="w-full bg-gradient-to-r from-accent to-accent2 text-black font-bold p-3 rounded-2xl shadow active:scale-95 transition">
 Commander
 </button>
 
@@ -146,45 +156,80 @@ return Object.values(cart).reduce((a,b)=>a+b,0);
 }
 
 /* =========================
-   PRODUITS (AMÉLIORÉS)
+   PRODUITS UI PREMIUM
 ========================= */
 function renderProducts(){
 productsDiv.innerHTML="";
 
 PRODUCTS.forEach(p=>{
 
+const qty = cart[p.id] || 0;
+
 const div=document.createElement("div");
-div.className="bg-card p-5 rounded-2xl flex justify-between items-center shadow-lg border border-white/5";
+div.className="bg-card/70 backdrop-blur-xl p-6 rounded-3xl shadow-soft border border-white/5 transition hover:scale-[1.02] duration-300";
 
 div.innerHTML=`
-<div class="space-y-2">
+<div class="flex justify-between items-start">
 
-<div class="flex items-center gap-3">
-<div class="text-lg font-black">${p.name}</div>
-<div class="bg-accent text-black text-xs font-bold px-2 py-1 rounded-full">
+<div>
+<div class="text-xl font-extrabold">${p.name}</div>
+
+<div class="flex items-center gap-2 mt-3">
+<span class="bg-accent text-black text-xs font-bold px-3 py-1 rounded-full shadow">
 ${p.rate}%
-</div>
-</div>
+</span>
 
-<div class="text-sm opacity-70">
+<span class="bg-white/10 text-xs px-3 py-1 rounded-full">
 🌍 ${p.country}
+</span>
 </div>
 
-<div class="text-sm font-semibold">
-${p.price} € <span class="opacity-60 text-xs">/ gramme</span>
+<div class="mt-4 text-2xl font-bold">
+${p.price}€
+<span class="text-xs opacity-60 font-medium">/ gramme</span>
+</div>
 </div>
 
 </div>
 
-<button class="bg-gradient-to-r from-accent to-accent2 text-black px-4 py-2 rounded-xl font-bold hover:scale-105 transition">
-Ajouter
-</button>
+<div class="mt-5">
+
+${
+qty === 0
+? `<button class="addBtn w-full bg-gradient-to-r from-accent to-accent2 text-black py-3 rounded-2xl font-bold shadow active:scale-95 transition">
+Ajouter au panier
+</button>`
+: `
+<div class="flex items-center justify-between bg-bg rounded-2xl p-3">
+<button class="dec bg-card px-4 py-1 rounded-xl text-lg active:scale-95 transition">-</button>
+<span class="font-bold text-lg">${qty}</span>
+<button class="inc bg-card px-4 py-1 rounded-xl text-lg active:scale-95 transition">+</button>
+</div>
+`
+}
+
+</div>
 `;
 
-div.querySelector("button").onclick=()=>{
-cart[p.id]=(cart[p.id]||0)+1;
+if(qty === 0){
+div.querySelector(".addBtn").onclick=()=>{
+cart[p.id]=1;
 saveCart();
+renderProducts();
 };
+}else{
+div.querySelector(".inc").onclick=()=>{
+cart[p.id]++;
+saveCart();
+renderProducts();
+};
+div.querySelector(".dec").onclick=()=>{
+cart[p.id]--;
+if(cart[p.id]<=0) delete cart[p.id];
+saveCart();
+renderProducts();
+};
+}
 
 productsDiv.appendChild(div);
 });
@@ -232,42 +277,14 @@ const p=PRODUCTS.find(x=>x.id===id);
 const lineTotal=p.price*qty;
 
 const div=document.createElement("div");
-div.className="bg-bg p-4 rounded-xl space-y-3";
+div.className="bg-bg p-4 rounded-2xl space-y-3";
 
 div.innerHTML=`
 <div class="flex justify-between">
 <div class="font-bold">${p.name}</div>
 <div>${lineTotal} €</div>
 </div>
-
-<div class="flex justify-between items-center">
-<div class="flex items-center gap-3">
-<button class="dec bg-card px-3 rounded">-</button>
-<span>${qty}</span>
-<button class="inc bg-card px-3 rounded">+</button>
-</div>
-<button class="remove text-red-400 text-sm">Retirer</button>
-</div>
 `;
-
-div.querySelector(".inc").onclick=()=>{
-cart[id]++;
-saveCart();
-renderSheet();
-};
-
-div.querySelector(".dec").onclick=()=>{
-cart[id]--;
-if(cart[id]<=0) delete cart[id];
-saveCart();
-renderSheet();
-};
-
-div.querySelector(".remove").onclick=()=>{
-delete cart[id];
-saveCart();
-renderSheet();
-};
 
 cartItems.appendChild(div);
 });
@@ -276,43 +293,6 @@ const totalDiv=document.createElement("div");
 totalDiv.className="border-t border-white/10 pt-4 text-right font-bold text-lg";
 totalDiv.innerHTML="Total : "+cartTotal()+" €";
 cartItems.appendChild(totalDiv);
-}
-
-/* =========================
-   MODE UI
-========================= */
-modeSelect.onchange=()=>{
-if(modeSelect.value==="LIVRAISON"){
-addressInput.classList.remove("hidden");
-}else{
-addressInput.classList.add("hidden");
-}
-};
-
-/* =========================
-   BUILD MESSAGE
-========================= */
-function buildMessage(){
-
-let txt="📦 Commande AM Shop\n\n";
-
-Object.entries(cart).forEach(([id,qty])=>{
-const p=PRODUCTS.find(x=>x.id===id);
-txt+=`• ${p.name} x${qty} = ${p.price*qty} €\n`;
-});
-
-txt+=`\n💰 Total : ${cartTotal()} €\n\n`;
-
-txt+="📍 Infos client\n";
-txt+=`Mode : ${modeSelect.value}\n`;
-txt+=`Nom : ${nameInput.value||"-"}\n`;
-txt+=`Téléphone : ${phoneInput.value||"-"}\n`;
-
-if(modeSelect.value==="LIVRAISON"){
-txt+=`Adresse : ${addressInput.value||"-"}\n`;
-}
-
-return txt;
 }
 
 /* =========================
@@ -335,7 +315,7 @@ alert("Adresse requise pour livraison");
 return;
 }
 
-const message=buildMessage();
+const message="Commande AM Shop - Total : "+cartTotal()+" €";
 
 window.open(
 `https://t.me/${CONTACT_USERNAME}?text=${encodeURIComponent(message)}`
