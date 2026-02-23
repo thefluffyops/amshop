@@ -1,122 +1,133 @@
 <!DOCTYPE html>
-<html lang="fr" class="dark">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 <title>AM Shop</title>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/framework7@8/framework7-bundle.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/framework7@8/framework7-bundle.min.js"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-
-<script>
-tailwind.config = {
-darkMode:"class",
-theme:{
-extend:{
-colors:{
-bg:"#0B1020",
-card:"#111827",
-accent:"#FFD400",
-accent2:"#FFB800"
-},
-boxShadow:{
-soft:"0 20px 40px rgba(0,0,0,0.5)"
-}
-}
-}
-}
-</script>
 
 <style>
-body{
-background:
-radial-gradient(circle at 15% 20%, rgba(255,212,0,0.08), transparent 40%),
-radial-gradient(circle at 85% 80%, rgba(255,184,0,0.06), transparent 40%),
-linear-gradient(180deg,#0B1020 0%,#0F172A 100%);
+body {
+  background: linear-gradient(180deg,#0f0f14,#1a1a22);
 }
-
-/* Glow effect */
-.card-glow{
-position:relative;
-overflow:hidden;
+.product-rate {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: #007aff;
+  color: white;
 }
-.card-glow::before{
-content:"";
-position:absolute;
-top:-50%;
-left:-50%;
-width:200%;
-height:200%;
-background:radial-gradient(circle, rgba(255,212,0,0.08), transparent 40%);
-opacity:0;
-transition:opacity .4s;
-}
-.card-glow:hover::before{
-opacity:1;
+.product-country {
+  font-size: 12px;
+  opacity: 0.6;
 }
 </style>
 </head>
 
-<body class="text-white min-h-screen">
+<body>
 
-<div class="max-w-4xl mx-auto p-5 pb-40">
+<div id="app">
+<div class="view view-main">
 
-<div class="mb-10">
-<h1 class="text-4xl font-black bg-gradient-to-r from-accent to-accent2 bg-clip-text text-transparent">
-AM Shop
-</h1>
-<p class="text-sm opacity-60 mt-1">
-Premium selection • Qualité supérieure
-</p>
+<div class="page" data-name="home">
+
+<div class="navbar">
+<div class="navbar-inner sliding">
+<div class="title">AM Shop</div>
+</div>
 </div>
 
-<div id="products" class="grid gap-6"></div>
+<div class="page-content">
 
-</div>
-
-<!-- CART FLOATING -->
-<div id="cartBar"
-class="fixed bottom-6 left-4 right-4 bg-gradient-to-r from-card to-bg backdrop-blur-xl border border-white/10 p-4 flex justify-between items-center cursor-pointer shadow-soft rounded-2xl">
-
-<div>
-<div class="font-bold text-lg">🛒 Panier</div>
-<div id="cartInfo" class="text-sm opacity-70">0 article</div>
-</div>
-
-<div id="cartCount"
-class="bg-accent text-black font-bold px-4 py-1 rounded-full shadow">
-0
+<div class="list media-list inset">
+<ul id="productList"></ul>
 </div>
 
 </div>
-
-<!-- OVERLAY -->
-<div id="overlay"
-class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm"></div>
+</div>
+</div>
+</div>
 
 <!-- SHEET -->
-<div id="sheet"
-class="fixed left-0 right-0 bottom-0 bg-card rounded-t-3xl p-6 translate-y-full transition-transform duration-300 max-h-[90vh] overflow-y-auto shadow-soft">
+<div class="sheet-modal" id="cartSheet">
+<div class="toolbar">
+<div class="toolbar-inner justify-content-center">
+<div class="title">Votre commande</div>
+</div>
+</div>
+<div class="sheet-modal-inner">
+<div class="list" id="cartList"></div>
 
-<h2 class="text-xl font-black mb-4">Votre commande</h2>
+<div class="block">
+<div class="list">
+<ul>
+<li>
+<div class="item-content item-input">
+<div class="item-inner">
+<div class="item-title item-label">Mode</div>
+<div class="item-input-wrap">
+<select id="modeSelect">
+<option value="SUR_PLACE">Sur place</option>
+<option value="COLIS">Colis</option>
+<option value="LIVRAISON">Livraison</option>
+</select>
+</div>
+</div>
+</div>
+</li>
 
-<div id="cartItems" class="space-y-3 mb-4"></div>
+<li>
+<div class="item-content item-input">
+<div class="item-inner">
+<div class="item-title item-label">Nom</div>
+<div class="item-input-wrap">
+<input type="text" id="nameInput">
+</div>
+</div>
+</div>
+</li>
 
-<div class="border-t border-white/10 pt-4 space-y-3">
+<li>
+<div class="item-content item-input">
+<div class="item-inner">
+<div class="item-title item-label">Téléphone</div>
+<div class="item-input-wrap">
+<input type="text" id="phoneInput">
+</div>
+</div>
+</div>
+</li>
 
-<input id="name" placeholder="Nom"
-class="w-full p-3 bg-bg rounded-2xl">
+<li id="addressField" style="display:none;">
+<div class="item-content item-input">
+<div class="item-inner">
+<div class="item-title item-label">Adresse</div>
+<div class="item-input-wrap">
+<input type="text" id="addressInput">
+</div>
+</div>
+</div>
+</li>
 
-<input id="phone" placeholder="Téléphone"
-class="w-full p-3 bg-bg rounded-2xl">
-
-<button id="orderBtn"
-class="w-full bg-gradient-to-r from-accent to-accent2 text-black font-bold p-3 rounded-2xl shadow active:scale-95 transition">
-Commander
-</button>
-
+</ul>
 </div>
 
+<a href="#" id="orderBtn" class="button button-fill button-large color-blue">Commander</a>
+
+</div>
+</div>
+</div>
+
+<!-- TAB BAR -->
+<div class="toolbar toolbar-bottom">
+<div class="toolbar-inner">
+<a href="#" id="openCart" class="link">
+Panier (<span id="cartCount">0</span>)
+</a>
+</div>
 </div>
 
 <script>
@@ -127,164 +138,85 @@ tg?.expand();
 
 const CONTACT_USERNAME = "TON_USERNAME";
 
+const app = new Framework7({
+  root: '#app',
+  theme: 'ios'
+});
+
 const PRODUCTS = [
 {id:"A1",name:"Frozen",price:15,rate:31,country:"USA"},
 {id:"A2",name:"Cali US",price:20,rate:28,country:"USA"},
 {id:"A3",name:"Cali NL",price:10,rate:24,country:"Pays-Bas"}
 ];
 
-let cart = JSON.parse(localStorage.getItem("am_cart")||"{}");
+let cart = {};
 
-const productsDiv=document.getElementById("products");
-const cartBar=document.getElementById("cartBar");
-const sheet=document.getElementById("sheet");
-const overlay=document.getElementById("overlay");
-const cartItems=document.getElementById("cartItems");
-const cartInfo=document.getElementById("cartInfo");
-const cartCount=document.getElementById("cartCount");
+const productList = document.getElementById("productList");
+const cartList = document.getElementById("cartList");
+const cartCount = document.getElementById("cartCount");
+const sheet = app.sheet.create({ el: '#cartSheet' });
 
-function saveCart(){
-localStorage.setItem("am_cart",JSON.stringify(cart));
-renderCart();
-}
-
-function cartTotal(){
-return Object.entries(cart).reduce((total,[id,qty])=>{
-const p=PRODUCTS.find(x=>x.id===id);
-return total + (p.price*qty);
-},0);
-}
-
-function cartCountTotal(){
-return Object.values(cart).reduce((a,b)=>a+b,0);
-}
-
-/* PRODUCTS */
 function renderProducts(){
-productsDiv.innerHTML="";
-
+productList.innerHTML="";
 PRODUCTS.forEach(p=>{
-
-const qty = cart[p.id] || 0;
-
-const div=document.createElement("div");
-div.className="card-glow bg-card/70 backdrop-blur-xl p-6 rounded-3xl shadow-soft border border-white/5 transition hover:scale-[1.03] duration-300";
-
-div.innerHTML=`
-<div class="flex justify-between items-start">
-
-<div>
-<div class="text-xl font-extrabold">${p.name}</div>
-
-<div class="flex items-center gap-2 mt-3">
-<span class="bg-accent text-black text-xs font-bold px-3 py-1 rounded-full shadow">
-${p.rate}%
-</span>
-
-<span class="bg-white/10 text-xs px-3 py-1 rounded-full">
-🌍 ${p.country}
-</span>
+const li = document.createElement("li");
+li.innerHTML=`
+<a href="#" class="item-link item-content">
+<div class="item-inner">
+<div class="item-title-row">
+<div class="item-title">${p.name}</div>
+<div class="item-after">${p.price}€ / g</div>
 </div>
-
-<div class="mt-4 text-2xl font-bold">
-${p.price}€
-<span class="text-xs opacity-60 font-medium">/ gramme</span>
+<div class="item-subtitle">
+<span class="product-rate">${p.rate}%</span>
+<span class="product-country">${p.country}</span>
 </div>
 </div>
-
-</div>
-
-<div class="mt-5">
-
-${
-qty === 0
-? `<button class="addBtn w-full bg-gradient-to-r from-accent to-accent2 text-black py-3 rounded-2xl font-bold shadow active:scale-95 transition">
-Ajouter au panier
-</button>`
-: `
-<div class="flex items-center justify-between bg-bg rounded-2xl p-3">
-<button class="dec bg-card px-4 py-1 rounded-xl text-lg active:scale-95 transition">-</button>
-<span class="font-bold text-lg">${qty}</span>
-<button class="inc bg-card px-4 py-1 rounded-xl text-lg active:scale-95 transition">+</button>
-</div>
-`
-}
-
-</div>
+</a>
 `;
-
-if(qty === 0){
-div.querySelector(".addBtn").onclick=()=>{
-cart[p.id]=1;
-saveCart();
-renderProducts();
+li.onclick=()=>{
+cart[p.id]=(cart[p.id]||0)+1;
+renderCart();
 };
-}else{
-div.querySelector(".inc").onclick=()=>{
-cart[p.id]++;
-saveCart();
-renderProducts();
-};
-div.querySelector(".dec").onclick=()=>{
-cart[p.id]--;
-if(cart[p.id]<=0) delete cart[p.id];
-saveCart();
-renderProducts();
-};
-}
-
-productsDiv.appendChild(div);
+productList.appendChild(li);
 });
 }
 
-/* CART BAR */
 function renderCart(){
-const count=cartCountTotal();
-cartCount.textContent=count;
-cartInfo.textContent=count>0
-? count+" article(s) • "+cartTotal()+" €"
-: "Panier vide";
-}
+cartList.innerHTML="";
+let total=0;
+let count=0;
 
-/* SHEET */
-function openSheet(){
-overlay.classList.remove("hidden");
-sheet.classList.remove("translate-y-full");
-renderSheet();
-}
-
-function closeSheet(){
-overlay.classList.add("hidden");
-sheet.classList.add("translate-y-full");
-}
-
-function renderSheet(){
-cartItems.innerHTML="";
 Object.entries(cart).forEach(([id,qty])=>{
 const p=PRODUCTS.find(x=>x.id===id);
-const line=document.createElement("div");
-line.className="flex justify-between bg-bg p-3 rounded-2xl";
-line.innerHTML=`
-<div>${p.name} x${qty}</div>
-<div>${p.price*qty} €</div>
-`;
-cartItems.appendChild(line);
+total+=p.price*qty;
+count+=qty;
+
+const div=document.createElement("div");
+div.className="block";
+div.innerHTML=`${p.name} x${qty} - ${p.price*qty}€`;
+cartList.appendChild(div);
 });
+
+cartCount.textContent=count;
 }
 
+document.getElementById("openCart").onclick=()=>sheet.open();
+
+document.getElementById("modeSelect").onchange=(e)=>{
+document.getElementById("addressField").style.display=
+e.target.value==="LIVRAISON"?"block":"none";
+};
+
 document.getElementById("orderBtn").onclick=()=>{
-if(cartCountTotal()===0){
-alert("Panier vide");
+if(Object.keys(cart).length===0){
+app.dialog.alert("Panier vide");
 return;
 }
 window.open(`https://t.me/${CONTACT_USERNAME}`);
 };
 
-cartBar.onclick=openSheet;
-overlay.onclick=closeSheet;
-
 renderProducts();
-renderCart();
 
 </script>
 
