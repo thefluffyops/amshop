@@ -1,1 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recharge Shop</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:#f5f5f7;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  margin:0;
+}
 
+.chat-container{
+  width:100%;
+  max-width:400px;
+  background:white;
+  border-radius:20px;
+  box-shadow:0 20px 50px rgba(0,0,0,0.1);
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+
+.message{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+}
+
+.message img{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+}
+
+.bubble{
+  background:#e5e5ea;
+  padding:12px 16px;
+  border-radius:20px;
+  max-width:70%;
+}
+
+.bubble.user{
+  background:#0a84ff;
+  color:white;
+  align-self:flex-end;
+}
+
+.buttons{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:10px;
+}
+
+button{
+  padding:12px 16px;
+  border-radius:20px;
+  border:none;
+  cursor:pointer;
+  font-size:16px;
+  transition:0.3s;
+}
+
+button.salade{
+  background:#34c759;
+  color:white;
+}
+
+button.chocolat{
+  background:#ff2d55;
+  color:white;
+}
+
+button:hover{
+  transform:translateY(-2px);
+}
+
+.hidden{
+  display:none;
+}
+</style>
+</head>
+<body>
+
+<div class="chat-container" id="chat">
+
+  <div class="message">
+    <img src="IMG_1719.png" alt="Max">
+    <div class="bubble" id="maxMsg">Salut ! Je suis Max 😎 <br> Comment veux-tu te recharger aujourd'hui ?</div>
+  </div>
+
+  <div class="buttons" id="choices">
+    <button class="salade" onclick="choose('Salade')">Je veux me recharger en salade</button>
+    <button class="chocolat" onclick="choose('Chocolat')">Je veux me recharger en chocolat</button>
+  </div>
+
+  <div class="message hidden" id="priceMsg">
+    <img src="IMG_1719.png" alt="Max">
+    <div class="bubble" id="maxPrice"></div>
+  </div>
+
+  <button id="orderBtn" class="hidden salade" onclick="sendOrder()">Commander</button>
+
+</div>
+
+<script>
+const tg = window.Telegram?.WebApp;
+tg?.ready();
+
+let choice = "";
+
+function choose(option){
+  choice = option;
+  document.getElementById("choices").classList.add("hidden");
+
+  const priceMsg = document.getElementById("priceMsg");
+  const maxPrice = document.getElementById("maxPrice");
+  let price = option==="Salade"? "5€" : "8€";
+  maxPrice.innerHTML = `Super ! Tu as choisi <b>${option}</b>. Le prix est de <b>${price}</b>.`;
+  priceMsg.classList.remove("hidden");
+
+  const orderBtn = document.getElementById("orderBtn");
+  orderBtn.className = `salade`;
+  orderBtn.classList.remove("hidden");
+}
+
+function sendOrder(){
+  const CONTACT_USERNAME = "giopvst"; // Remplacer par ton destinataire Telegram
+  let message = `📦 Recharge Shop\n\n- Option: ${choice}`;
+  window.open(`https://t.me/${CONTACT_USERNAME}?text=${encodeURIComponent(message)}`);
+}
+</script>
+
+</body>
+</html>
