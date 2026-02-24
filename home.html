@@ -90,13 +90,13 @@ button:hover{
 
   <!-- Options après clic -->
   <div class="buttons hidden" id="options">
-    <button onclick="choose('Salade')">Je veux me recharger en salade</button>
-    <button onclick="choose('Chocolat')">Je veux me recharger en chocolat</button>
+    <button onclick="choose('Cali')">Je veux me recharger en Cali</button>
+    <button onclick="choose('🍫')">Je veux me recharger en 🍫</button>
   </div>
 
   <!-- Confirmation -->
   <div class="message hidden" id="confirmMsg">
-    <img src="IMG_1733" alt="Max">
+    <img src="IMG_1733.png" alt="Max">
     <div class="bubble" id="confirmText"></div>
   </div>
 
@@ -121,7 +121,7 @@ function choose(option){
 
   const confirmMsg = document.getElementById("confirmMsg");
   const confirmText = document.getElementById("confirmText");
-  let price = option==="Salade"? "5€" : "8€";
+  let price = option==="Cali"? "5€" : "8€";
   confirmText.innerHTML = `Super ! Tu as choisi <b>${option}</b>. Le prix est de <b>${price}</b>.`;
   confirmMsg.classList.remove("hidden");
 
