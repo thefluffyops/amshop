@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AM Shop</title>
+<title>AM SHOP</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -107,7 +107,7 @@ font-size:14px;
 
 <div class="max-w-md mx-auto px-5 pt-14 pb-32">
 
-<h1 class="text-4xl font-semibold mb-1">AM Shop</h1>
+<h1 class="text-4xl font-semibold mb-1">AM SHOP</h1>
 <p class="text-white/40 mb-10 text-sm">Premium Selection</p>
 
 <div id="products" class="space-y-6"></div>
@@ -160,7 +160,6 @@ Fermer
 </div>
 
 <script>
-
 const tg = window.Telegram?.WebApp;
 tg?.ready();
 tg?.expand();
@@ -269,7 +268,7 @@ alert("Adresse complète requise");
 return;
 }
 
-let message="📦 Commande AM Shop\n\n";
+let message="📦 Commande AM SHOP\n\n";
 Object.entries(cart).forEach(([id,qty])=>{
 const p=PRODUCTS.find(x=>x.id===id);
 message+=`• ${p.name} x${qty} = ${p.price*qty}€\n`;
@@ -284,7 +283,6 @@ window.open(`https://t.me/${CONTACT_USERNAME}?text=${encodeURIComponent(message)
 };
 
 renderProducts();
-
 </script>
 
 </body>
