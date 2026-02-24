@@ -35,15 +35,27 @@ h1{
   box-shadow:0 10px 25px rgba(0,0,0,0.05);
   cursor:pointer;
   transition:.2s;
+  position:relative;
 }
 
 .product:hover{
   transform:translateY(-2px);
 }
 
+.product.sold{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
 .price{
   font-weight:600;
   color:#0a84ff;
+  font-size:14px;
+}
+
+.thc{
+  font-size:13px;
+  color:#555;
 }
 
 .counter{
@@ -53,6 +65,26 @@ h1{
   padding:4px 10px;
   border-radius:20px;
   margin-left:10px;
+}
+
+.badge{
+  position:absolute;
+  top:-8px;
+  left:10px;
+  padding:4px 10px;
+  font-size:11px;
+  border-radius:20px;
+  font-weight:600;
+}
+
+.new{
+  background:#34c759;
+  color:white;
+}
+
+.sold-badge{
+  background:#ff3b30;
+  color:white;
 }
 
 .bottom-bar{
@@ -83,7 +115,7 @@ button{
   cursor:pointer;
 }
 
-/* ===== RECAP SCREEN ===== */
+/* RECAP */
 
 .recap-screen{
   position:fixed;
@@ -138,9 +170,8 @@ button{
   <button onclick="openRecap()">Voir le récap</button>
 </div>
 
-<!-- RECAP PAGE -->
 <div class="recap-screen" id="recapScreen">
-  <h2>Récapitulatif de ta commande</h2>
+  <h2>Récapitulatif</h2>
   <div id="recapContent"></div>
   <div class="recap-total">
     Total : <span id="recapTotal">0</span> €
@@ -160,17 +191,17 @@ tg?.expand();
 const CONTACT_USERNAME = "giopvst";
 
 const PRODUCTS = [
-{name:"Cali OG", price:15},
-{name:"Cali Purple", price:18},
-{name:"Cali Lemon", price:14},
-{name:"Cali Gelato", price:20},
-{name:"Cali Runtz", price:22},
-{name:"Cali Ice", price:16},
-{name:"Cali Cookies", price:19},
-{name:"Cali Haze", price:13},
-{name:"Cali Gold", price:17},
-{name:"Cali Diamond", price:25},
-{name:"Cali Exotic", price:30}
+{name:"Cali OG", price:15, thc:"24%", new:true},
+{name:"Cali Purple", price:18, thc:"27%", new:false},
+{name:"Cali Lemon", price:14, thc:"22%", new:false},
+{name:"Cali Gelato", price:20, thc:"29%", new:true},
+{name:"Cali Runtz", price:22, thc:"30%", sold:true},
+{name:"Cali Ice", price:16, thc:"23%"},
+{name:"Cali Cookies", price:19, thc:"26%"},
+{name:"Cali Haze", price:13, thc:"21%"},
+{name:"Cali Gold", price:17, thc:"25%"},
+{name:"Cali Diamond", price:25, thc:"32%", new:true},
+{name:"Cali Exotic", price:30, thc:"34%", sold:true}
 ];
 
 let cart = {};
@@ -180,14 +211,26 @@ function renderProducts(){
   PRODUCTS.forEach((p,index)=>{
     const div = document.createElement("div");
     div.className="product";
+    if(p.sold) div.classList.add("sold");
+
+    let badgeHTML="";
+    if(p.new) badgeHTML = `<div class="badge new">NEW</div>`;
+    if(p.sold) badgeHTML = `<div class="badge sold-badge">SOLD OUT</div>`;
+
     div.innerHTML = `
+      ${badgeHTML}
       <div>
         ${p.name}
         <span class="counter" id="counter-${index}" style="display:none;">0g</span>
+        <div class="thc">THC ${p.thc}</div>
       </div>
       <div class="price">${p.price}€ / g</div>
     `;
-    div.onclick=()=>addToCart(index);
+
+    if(!p.sold){
+      div.onclick=()=>addToCart(index);
+    }
+
     productList.appendChild(div);
   });
 }
@@ -254,7 +297,7 @@ function confirmOrder(){
     const qty = cart[index];
     const lineTotal = product.price * qty;
     total += lineTotal;
-    message += `${qty}g ${product.name} = ${lineTotal}€\n`;
+    message += `${qty}g ${product.name} (${product.thc} THC) = ${lineTotal}€\n`;
   });
 
   message += `\nTotal : ${total}€`;
