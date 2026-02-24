@@ -82,6 +82,46 @@ button{
   font-size:15px;
   cursor:pointer;
 }
+
+/* ===== RECAP SCREEN ===== */
+
+.recap-screen{
+  position:fixed;
+  inset:0;
+  background:white;
+  padding:25px;
+  display:none;
+  flex-direction:column;
+  overflow-y:auto;
+}
+
+.recap-screen.active{
+  display:flex;
+}
+
+.recap-item{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:12px;
+}
+
+.recap-total{
+  font-weight:700;
+  font-size:18px;
+  margin-top:20px;
+}
+
+.recap-buttons{
+  margin-top:30px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.secondary{
+  background:#eee;
+  color:black;
+}
 </style>
 </head>
 <body>
@@ -96,6 +136,20 @@ button{
     Total : <span id="totalPrice">0</span> €
   </div>
   <button onclick="openRecap()">Voir le récap</button>
+</div>
+
+<!-- RECAP PAGE -->
+<div class="recap-screen" id="recapScreen">
+  <h2>Récapitulatif de ta commande</h2>
+  <div id="recapContent"></div>
+  <div class="recap-total">
+    Total : <span id="recapTotal">0</span> €
+  </div>
+
+  <div class="recap-buttons">
+    <button onclick="confirmOrder()">Confirmer la commande</button>
+    <button class="secondary" onclick="closeRecap()">Retour</button>
+  </div>
 </div>
 
 <script>
@@ -126,7 +180,6 @@ function renderProducts(){
   PRODUCTS.forEach((p,index)=>{
     const div = document.createElement("div");
     div.className="product";
-    div.id="product-"+index;
     div.innerHTML = `
       <div>
         ${p.name}
@@ -163,6 +216,36 @@ function openRecap(){
     return;
   }
 
+  const recapScreen = document.getElementById("recapScreen");
+  const recapContent = document.getElementById("recapContent");
+  const recapTotal = document.getElementById("recapTotal");
+
+  recapContent.innerHTML="";
+  let total = 0;
+
+  Object.keys(cart).forEach(index=>{
+    const product = PRODUCTS[index];
+    const qty = cart[index];
+    const lineTotal = product.price * qty;
+    total += lineTotal;
+
+    recapContent.innerHTML += `
+      <div class="recap-item">
+        <div>${qty}g ${product.name}</div>
+        <div>${lineTotal}€</div>
+      </div>
+    `;
+  });
+
+  recapTotal.innerText = total;
+  recapScreen.classList.add("active");
+}
+
+function closeRecap(){
+  document.getElementById("recapScreen").classList.remove("active");
+}
+
+function confirmOrder(){
   let message = "📦 Commande AM SHOP\n\n";
   let total = 0;
 
