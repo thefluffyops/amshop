@@ -20,7 +20,7 @@ body{
 }
 
 h1{
-  font-size:28px;
+  font-size:26px;
   margin-bottom:15px;
 }
 
@@ -57,7 +57,11 @@ h1{
 .minus{ background:#eee; }
 .plus{ background:#0a84ff; color:white; }
 
-.quantity{ min-width:20px; text-align:center; font-weight:600; }
+.quantity{
+  min-width:20px;
+  text-align:center;
+  font-weight:600;
+}
 
 .bottom-bar{
   position:fixed;
@@ -128,7 +132,7 @@ input, select{
   <button class="main" onclick="openRecap()">Continuer</button>
 </div>
 
-<!-- RECAP -->
+<!-- RECAP SCREEN -->
 <div class="recap-screen" id="recapScreen">
   <h2>Récapitulatif</h2>
 
@@ -136,9 +140,9 @@ input, select{
 
   <div class="section">
     <strong>Mode de livraison</strong>
-    <select id="deliveryMode">
-      <option value="Sur place">Sur place</option>
+    <select id="deliveryMode" onchange="updateRecapTotal()">
       <option value="Livraison">Livraison</option>
+      <option value="Colissimo">Envoi par colis (Colissimo +3,99€)</option>
     </select>
   </div>
 
@@ -169,6 +173,7 @@ tg?.ready();
 tg?.expand();
 
 const CONTACT_USERNAME="giopvst";
+const SHIPPING_COST=3.99;
 
 const PRODUCTS=[
 {name:"Cali OG",price:15,thc:"24%"},
@@ -218,12 +223,16 @@ function changeQty(index,change){
   updateTotal();
 }
 
-function updateTotal(){
+function calculateSubtotal(){
   let total=0;
   Object.keys(cart).forEach(i=>{
     total+=PRODUCTS[i].price*cart[i];
   });
-  document.getElementById("totalPrice").innerText=total;
+  return total;
+}
+
+function updateTotal(){
+  document.getElementById("totalPrice").innerText=calculateSubtotal().toFixed(2);
 }
 
 function openRecap(){
@@ -232,20 +241,36 @@ function openRecap(){
     return;
   }
 
-  let content="";
-  let total=0;
+  let subtotal=calculateSubtotal();
+  let mode=document.getElementById("deliveryMode")?.value || "Livraison";
+  let shipping=mode==="Colissimo"?SHIPPING_COST:0;
+  let total=subtotal+shipping;
 
+  let content="";
   Object.keys(cart).forEach(i=>{
     const p=PRODUCTS[i];
     const qty=cart[i];
     const line=p.price*qty;
-    total+=line;
-    content+=`<div>${qty}g ${p.name} (${p.thc}) = ${line}€</div>`;
+    content+=`<div>${qty}g ${p.name} (${p.thc}) = ${line.toFixed(2)}€</div>`;
   });
 
+  if(mode==="Colissimo"){
+    content+=`<div style="margin-top:10px;">
+    Frais d’envoi (Colissimo) : ${SHIPPING_COST.toFixed(2)}€
+    </div>`;
+  }
+
   document.getElementById("recapContent").innerHTML=content;
-  document.getElementById("recapTotal").innerText=total;
+  document.getElementById("recapTotal").innerText=total.toFixed(2);
   document.getElementById("recapScreen").classList.add("active");
+}
+
+function updateRecapTotal(){
+  let subtotal=calculateSubtotal();
+  let mode=document.getElementById("deliveryMode").value;
+  let shipping=mode==="Colissimo"?SHIPPING_COST:0;
+  let total=subtotal+shipping;
+  document.getElementById("recapTotal").innerText=total.toFixed(2);
 }
 
 function closeRecap(){
@@ -253,40 +278,36 @@ function closeRecap(){
 }
 
 function confirmOrder(){
-  const mode=document.getElementById("deliveryMode").value;
   const name=document.getElementById("clientName").value.trim();
   const address=document.getElementById("clientAddress").value.trim();
   const city=document.getElementById("clientCity").value.trim();
+  const mode=document.getElementById("deliveryMode").value;
 
-  if(name===""){
-    alert("Nom obligatoire.");
+  if(name==="" || address==="" || city===""){
+    alert("Toutes les informations sont obligatoires.");
     return;
   }
 
-  if(mode==="Livraison" && (address==="" || city==="")){
-    alert("Adresse et ville obligatoires pour livraison.");
-    return;
-  }
+  let subtotal=calculateSubtotal();
+  let shipping=mode==="Colissimo"?SHIPPING_COST:0;
+  let total=subtotal+shipping;
 
   let message="📦 Nouvelle commande AM SHOP\n\n";
-  let total=0;
 
   Object.keys(cart).forEach(i=>{
     const p=PRODUCTS[i];
     const qty=cart[i];
     const line=p.price*qty;
-    total+=line;
-    message+=`${qty}g ${p.name} (${p.thc}) = ${line}€\n`;
+    message+=`${qty}g ${p.name} (${p.thc}) = ${line.toFixed(2)}€\n`;
   });
 
-  message+=`\nTotal estimé : ${total}€\n`;
-  message+=`Mode : ${mode}\n\n`;
-  message+=`Client : ${name}\n`;
-
-  if(mode==="Livraison"){
-    message+=`Adresse : ${address}\nVille : ${city}\n`;
+  if(mode==="Colissimo"){
+    message+=`\nFrais d’envoi (Colissimo) : ${SHIPPING_COST.toFixed(2)}€`;
   }
 
+  message+=`\nTotal estimé : ${total.toFixed(2)}€\n`;
+  message+=`Mode : ${mode}\n\n`;
+  message+=`Client : ${name}\nAdresse : ${address}\nVille : ${city}\n`;
   message+="\n⚠️ Le vendeur doit confirmer le prix final.";
 
   window.open(`https://t.me/${CONTACT_USERNAME}?text=${encodeURIComponent(message)}`);
