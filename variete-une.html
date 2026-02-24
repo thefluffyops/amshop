@@ -33,23 +33,10 @@ h1{
   justify-content:space-between;
   align-items:center;
   box-shadow:0 10px 25px rgba(0,0,0,0.05);
-  position:relative;
 }
 
-.product.sold{
-  opacity:0.5;
-}
-
-.price{
-  font-weight:600;
-  color:#0a84ff;
-  font-size:14px;
-}
-
-.thc{
-  font-size:13px;
-  color:#555;
-}
+.price{ font-weight:600; color:#0a84ff; }
+.thc{ font-size:13px; color:#555; }
 
 .controls{
   display:flex;
@@ -67,40 +54,10 @@ h1{
   cursor:pointer;
 }
 
-.minus{
-  background:#eee;
-}
+.minus{ background:#eee; }
+.plus{ background:#0a84ff; color:white; }
 
-.plus{
-  background:#0a84ff;
-  color:white;
-}
-
-.quantity{
-  min-width:20px;
-  text-align:center;
-  font-weight:600;
-}
-
-.badge{
-  position:absolute;
-  top:-8px;
-  left:10px;
-  padding:4px 10px;
-  font-size:11px;
-  border-radius:20px;
-  font-weight:600;
-}
-
-.new{
-  background:#34c759;
-  color:white;
-}
-
-.sold-badge{
-  background:#ff3b30;
-  color:white;
-}
+.quantity{ min-width:20px; text-align:center; font-weight:600; }
 
 .bottom-bar{
   position:fixed;
@@ -115,19 +72,47 @@ h1{
   align-items:center;
 }
 
-.total{
-  font-weight:600;
-  font-size:16px;
-}
-
 button.main{
   background:#0a84ff;
   color:white;
   border:none;
   padding:12px 22px;
   border-radius:25px;
-  font-size:15px;
   cursor:pointer;
+}
+
+/* RECAP */
+
+.recap-screen{
+  position:fixed;
+  inset:0;
+  background:white;
+  padding:25px;
+  display:none;
+  flex-direction:column;
+  overflow-y:auto;
+}
+
+.recap-screen.active{ display:flex; }
+
+input, select{
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  margin-top:10px;
+  width:100%;
+}
+
+.section{
+  margin-top:20px;
+}
+
+.warning{
+  margin-top:20px;
+  background:#fff3cd;
+  padding:12px;
+  border-radius:10px;
+  font-size:14px;
 }
 </style>
 </head>
@@ -139,10 +124,38 @@ button.main{
 </div>
 
 <div class="bottom-bar">
-  <div class="total">
-    Total : <span id="totalPrice">0</span> €
+  <div>Total : <span id="totalPrice">0</span> €</div>
+  <button class="main" onclick="openRecap()">Continuer</button>
+</div>
+
+<!-- RECAP -->
+<div class="recap-screen" id="recapScreen">
+  <h2>Récapitulatif</h2>
+
+  <div id="recapContent"></div>
+
+  <div class="section">
+    <strong>Mode de livraison</strong>
+    <select id="deliveryMode" onchange="toggleAddress()">
+      <option value="Sur place">Sur place</option>
+      <option value="Colis">Colis</option>
+    </select>
+
+    <input type="text" id="addressField" placeholder="Adresse complète" style="display:none;">
   </div>
-  <button class="main" onclick="openRecap()">Voir le récap</button>
+
+  <div class="section">
+    <strong>Total estimé : <span id="recapTotal">0</span> €</strong>
+  </div>
+
+  <div class="warning">
+    ⚠️ Le vendeur doit confirmer le prix final.
+  </div>
+
+  <div class="section">
+    <button class="main" onclick="confirmOrder()">Envoyer la commande</button>
+    <button onclick="closeRecap()" style="margin-top:10px;">Retour</button>
+  </div>
 </div>
 
 <script>
@@ -153,93 +166,121 @@ tg?.expand();
 const CONTACT_USERNAME = "giopvst";
 
 const PRODUCTS = [
-{name:"Cali OG", price:15, thc:"24%", new:true},
+{name:"Cali OG", price:15, thc:"24%"},
 {name:"Cali Purple", price:18, thc:"27%"},
 {name:"Cali Lemon", price:14, thc:"22%"},
-{name:"Cali Gelato", price:20, thc:"29%", new:true},
-{name:"Cali Runtz", price:22, thc:"30%", sold:true},
+{name:"Cali Gelato", price:20, thc:"29%"},
+{name:"Cali Runtz", price:22, thc:"30%"},
 {name:"Cali Ice", price:16, thc:"23%"},
 {name:"Cali Cookies", price:19, thc:"26%"},
 {name:"Cali Haze", price:13, thc:"21%"},
 {name:"Cali Gold", price:17, thc:"25%"},
-{name:"Cali Diamond", price:25, thc:"32%", new:true},
-{name:"Cali Exotic", price:30, thc:"34%", sold:true}
+{name:"Cali Diamond", price:25, thc:"32%"},
+{name:"Cali Exotic", price:30, thc:"34%"}
 ];
 
-let cart = {};
-
-const productList = document.getElementById("productList");
+let cart={};
+const productList=document.getElementById("productList");
 
 function renderProducts(){
   PRODUCTS.forEach((p,index)=>{
-    const div = document.createElement("div");
+    const div=document.createElement("div");
     div.className="product";
-    if(p.sold) div.classList.add("sold");
-
-    let badgeHTML="";
-    if(p.new) badgeHTML=`<div class="badge new">NEW</div>`;
-    if(p.sold) badgeHTML=`<div class="badge sold-badge">SOLD OUT</div>`;
-
     div.innerHTML=`
-      ${badgeHTML}
       <div>
-        <div><strong>${p.name}</strong></div>
+        <strong>${p.name}</strong>
         <div class="thc">THC ${p.thc}</div>
         <div class="price">${p.price}€ / g</div>
       </div>
-
-      ${p.sold ? "" : `
       <div class="controls">
-        <button class="minus" onclick="event.stopPropagation(); changeQty(${index}, -1)">−</button>
+        <button class="minus" onclick="changeQty(${index}, -1)">−</button>
         <div class="quantity" id="qty-${index}">0</div>
-        <button class="plus" onclick="event.stopPropagation(); changeQty(${index}, 1)">+</button>
+        <button class="plus" onclick="changeQty(${index}, 1)">+</button>
       </div>
-      `}
     `;
-
     productList.appendChild(div);
   });
 }
 
 function changeQty(index, change){
-  cart[index] = (cart[index] || 0) + change;
-
-  if(cart[index] <= 0){
+  cart[index]=(cart[index]||0)+change;
+  if(cart[index]<=0){
     delete cart[index];
-    document.getElementById("qty-"+index).innerText = 0;
+    document.getElementById("qty-"+index).innerText=0;
   } else {
-    document.getElementById("qty-"+index).innerText = cart[index];
+    document.getElementById("qty-"+index).innerText=cart[index];
   }
-
   updateTotal();
 }
 
 function updateTotal(){
-  let total = 0;
-  Object.keys(cart).forEach(index=>{
-    total += PRODUCTS[index].price * cart[index];
+  let total=0;
+  Object.keys(cart).forEach(i=>{
+    total+=PRODUCTS[i].price*cart[i];
   });
-  document.getElementById("totalPrice").innerText = total;
+  document.getElementById("totalPrice").innerText=total;
 }
 
 function openRecap(){
-  if(Object.keys(cart).length === 0){
+  if(Object.keys(cart).length===0){
     alert("Aucune sélection");
     return;
   }
 
-  let message="📦 Commande AM SHOP\n\n";
+  let content="";
   let total=0;
 
-  Object.keys(cart).forEach(index=>{
-    const p=PRODUCTS[index];
-    const qty=cart[index];
-    const lineTotal=p.price*qty;
-    total+=lineTotal;
-    message+=`${qty}g ${p.name} (${p.thc}) = ${lineTotal}€\n`;
+  Object.keys(cart).forEach(i=>{
+    const p=PRODUCTS[i];
+    const qty=cart[i];
+    const line=p.price*qty;
+    total+=line;
+    content+=`<div>${qty}g ${p.name} (${p.thc}) = ${line}€</div>`;
   });
 
-  message+=`\nTotal : ${total}€`;
+  document.getElementById("recapContent").innerHTML=content;
+  document.getElementById("recapTotal").innerText=total;
+  document.getElementById("recapScreen").classList.add("active");
+}
+
+function closeRecap(){
+  document.getElementById("recapScreen").classList.remove("active");
+}
+
+function toggleAddress(){
+  const mode=document.getElementById("deliveryMode").value;
+  document.getElementById("addressField").style.display =
+    mode==="Colis" ? "block" : "none";
+}
+
+function confirmOrder(){
+  const mode=document.getElementById("deliveryMode").value;
+  const address=document.getElementById("addressField").value;
+
+  if(mode==="Colis" && address.trim()===""){
+    alert("Adresse obligatoire pour livraison colis.");
+    return;
+  }
+
+  let message="📦 Nouvelle commande AM SHOP\n\n";
+  let total=0;
+
+  Object.keys(cart).forEach(i=>{
+    const p=PRODUCTS[i];
+    const qty=cart[i];
+    const line=p.price*qty;
+    total+=line;
+    message+=`${qty}g ${p.name} (${p.thc}) = ${line}€\n`;
+  });
+
+  message+=`\nTotal estimé : ${total}€\n`;
+  message+=`Mode livraison : ${mode}\n`;
+
+  if(mode==="Colis"){
+    message+=`Adresse : ${address}\n`;
+  }
+
+  message+="\n⚠️ Le vendeur doit confirmer le prix final.";
 
   window.open(`https://t.me/${CONTACT_USERNAME}?text=${encodeURIComponent(message)}`);
 }
