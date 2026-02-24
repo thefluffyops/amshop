@@ -136,12 +136,17 @@ input, select{
 
   <div class="section">
     <strong>Mode de livraison</strong>
-    <select id="deliveryMode" onchange="toggleAddress()">
+    <select id="deliveryMode">
       <option value="Sur place">Sur place</option>
-      <option value="Colis">Colis</option>
+      <option value="Livraison">Livraison</option>
     </select>
+  </div>
 
-    <input type="text" id="addressField" placeholder="Adresse complète" style="display:none;">
+  <div class="section">
+    <strong>Informations client</strong>
+    <input type="text" id="clientName" placeholder="Nom complet">
+    <input type="text" id="clientAddress" placeholder="Adresse complète">
+    <input type="text" id="clientCity" placeholder="Ville">
   </div>
 
   <div class="section">
@@ -163,20 +168,20 @@ const tg = window.Telegram?.WebApp;
 tg?.ready();
 tg?.expand();
 
-const CONTACT_USERNAME = "giopvst";
+const CONTACT_USERNAME="giopvst";
 
-const PRODUCTS = [
-{name:"Cali OG", price:15, thc:"24%"},
-{name:"Cali Purple", price:18, thc:"27%"},
-{name:"Cali Lemon", price:14, thc:"22%"},
-{name:"Cali Gelato", price:20, thc:"29%"},
-{name:"Cali Runtz", price:22, thc:"30%"},
-{name:"Cali Ice", price:16, thc:"23%"},
-{name:"Cali Cookies", price:19, thc:"26%"},
-{name:"Cali Haze", price:13, thc:"21%"},
-{name:"Cali Gold", price:17, thc:"25%"},
-{name:"Cali Diamond", price:25, thc:"32%"},
-{name:"Cali Exotic", price:30, thc:"34%"}
+const PRODUCTS=[
+{name:"Cali OG",price:15,thc:"24%"},
+{name:"Cali Purple",price:18,thc:"27%"},
+{name:"Cali Lemon",price:14,thc:"22%"},
+{name:"Cali Gelato",price:20,thc:"29%"},
+{name:"Cali Runtz",price:22,thc:"30%"},
+{name:"Cali Ice",price:16,thc:"23%"},
+{name:"Cali Cookies",price:19,thc:"26%"},
+{name:"Cali Haze",price:13,thc:"21%"},
+{name:"Cali Gold",price:17,thc:"25%"},
+{name:"Cali Diamond",price:25,thc:"32%"},
+{name:"Cali Exotic",price:30,thc:"34%"}
 ];
 
 let cart={};
@@ -202,7 +207,7 @@ function renderProducts(){
   });
 }
 
-function changeQty(index, change){
+function changeQty(index,change){
   cart[index]=(cart[index]||0)+change;
   if(cart[index]<=0){
     delete cart[index];
@@ -247,18 +252,19 @@ function closeRecap(){
   document.getElementById("recapScreen").classList.remove("active");
 }
 
-function toggleAddress(){
-  const mode=document.getElementById("deliveryMode").value;
-  document.getElementById("addressField").style.display =
-    mode==="Colis" ? "block" : "none";
-}
-
 function confirmOrder(){
   const mode=document.getElementById("deliveryMode").value;
-  const address=document.getElementById("addressField").value;
+  const name=document.getElementById("clientName").value.trim();
+  const address=document.getElementById("clientAddress").value.trim();
+  const city=document.getElementById("clientCity").value.trim();
 
-  if(mode==="Colis" && address.trim()===""){
-    alert("Adresse obligatoire pour livraison colis.");
+  if(name===""){
+    alert("Nom obligatoire.");
+    return;
+  }
+
+  if(mode==="Livraison" && (address==="" || city==="")){
+    alert("Adresse et ville obligatoires pour livraison.");
     return;
   }
 
@@ -274,10 +280,11 @@ function confirmOrder(){
   });
 
   message+=`\nTotal estimé : ${total}€\n`;
-  message+=`Mode livraison : ${mode}\n`;
+  message+=`Mode : ${mode}\n\n`;
+  message+=`Client : ${name}\n`;
 
-  if(mode==="Colis"){
-    message+=`Adresse : ${address}\n`;
+  if(mode==="Livraison"){
+    message+=`Adresse : ${address}\nVille : ${city}\n`;
   }
 
   message+="\n⚠️ Le vendeur doit confirmer le prix final.";
